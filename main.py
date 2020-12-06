@@ -1,6 +1,6 @@
 from telegram.ext import Updater, CommandHandler
 from dotenv import load_dotenv
-from callbacks import start
+from callbacks import start, event
 import os
 
 load_dotenv()
@@ -11,6 +11,7 @@ def main():
     updater = Updater(token=os.getenv("TELEGRAM_BOT_TOKEN"), use_context=True)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start.start_callback))
+    dispatcher.add_handler(CommandHandler("eventlist", event.event_callback))
 
     updater.start_polling()
     updater.idle()

@@ -28,7 +28,7 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
         msg = msg.replace("-", "/")
         
 
-    update.message.reply_text(msg, parse_mode='MarkdownV2')
+        update.message.reply_text(msg, parse_mode='MarkdownV2')
 
 
 

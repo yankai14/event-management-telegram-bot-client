@@ -1,6 +1,8 @@
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 import requests
+from util.conv_flow.payment_flow import PaymentFlow
+
 
 def event_callback(update:Update, context: CallbackContext) -> None:
 
@@ -9,13 +11,29 @@ def event_callback(update:Update, context: CallbackContext) -> None:
         response_data = response.json()
         results = response_data["results"]
 
+        keyboard = []
         msg = "*These are the events available for your participation*\n\n"
         for result in results:
-            msg += f"/{result['eventCode']}:\n"
+            msg += f"{result['eventCode']}:\n"
             msg += f"Name: {result['name']}\n"
             msg += f"Description: {result['description']}\n\n"
 
-        update.message.reply_text(msg, parse_mode='MarkdownV2')
+            keyboard.append([InlineKeyboardButton(
+                result['name'], 
+                callback_data=result['eventCode']
+            )])
+
+        context.user_data["events"] = results
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        update.message.reply_text(
+            msg, 
+            reply_markup=reply_markup, 
+            parse_mode='MarkdownV2'
+        )
+
+        return PaymentFlow.EVENT_INSTANCE
+
 
 
 

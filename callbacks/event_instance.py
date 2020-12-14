@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 import requests
 from dateutil import parser
-from util.states import State
+from util.enums import State
 
 
 def event_instance_callback(update:Update, context: CallbackContext) -> None:
@@ -35,7 +35,7 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
 
         keyboard = [
             [
-                InlineKeyboardButton("Back", callback_data=str(State.END))
+                InlineKeyboardButton("Back", callback_data=str(State.END.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)

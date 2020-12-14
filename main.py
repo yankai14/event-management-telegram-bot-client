@@ -1,6 +1,3 @@
-from threading import Event
-
-from telegram.callbackquery import CallbackQuery
 from callbacks import stop
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from dotenv import load_dotenv
@@ -40,6 +37,10 @@ def main():
         },
         fallbacks=[
             CommandHandler("stop", stop.stop_callback),
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{str(State.END.value)}$"
+            ),
             CallbackQueryHandler(
                 register.submit_info_callback,
                 pattern=f"^{State.REGISTER_SUBMIT.value}$"

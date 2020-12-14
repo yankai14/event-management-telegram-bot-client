@@ -22,7 +22,8 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
             InlineKeyboardButton(text="Password", callback_data=Constant.PASSWORD.value),
         ],
         [
-            InlineKeyboardButton(text="Done", callback_data=State.REGISTER_SUBMIT.value)
+            InlineKeyboardButton(text="Done", callback_data=State.REGISTER_SUBMIT.value),
+            InlineKeyboardButton(text="Back", callback_data=State.END.value)
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)

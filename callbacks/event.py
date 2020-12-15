@@ -8,7 +8,8 @@ def event_callback(update:Update, context: CallbackContext) -> None:
     
     query = update.callback_query
     query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    response = requests.get("http://127.0.0.1:8000/event")
+    headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
+    response = requests.get("http://127.0.0.1:8000/event", headers=headers)
     if response.status_code == 200:
         response_data = response.json()
         results = response_data["results"]

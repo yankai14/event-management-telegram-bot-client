@@ -78,6 +78,7 @@ def login_submit_info_callback(update: Update, context: CallbackContext) -> None
     response = requests.post("http://127.0.0.1:8000/auth/login", json=payload)
 
     if response.status_code == 200:   
+        context.user_data["AUTH_TOKEN"] = response.json()["token"]
         msg = "Logged In, returning to main menu\.\.\.\."
         context.user_data.pop("loginData", None)
         context.user_data.pop("currentFeature", None)

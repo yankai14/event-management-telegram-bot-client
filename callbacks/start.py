@@ -8,16 +8,22 @@ def start_callback(update:Update, context: CallbackContext) -> None:
     msg = "*Welcome to ALD Event Manager*\n\n"
     msg += "Listed below are the following features you can take advantage of:\n"
     msg += "Type /stop to exit the bot"
-    
-    keyboard = [
-        [
-            InlineKeyboardButton(text="Event List", callback_data=str(State.EVENT_LIST.value)),
-            InlineKeyboardButton(text="Registration", callback_data=str(State.REGISTER.value))
-        ],
-        [
-            InlineKeyboardButton(text="Login", callback_data=str(State.LOGIN.value))
+
+
+    if context.user_data.get("AUTH_TOKEN"):
+        keyboard = [
+            [
+                InlineKeyboardButton(text="Event List", callback_data=str(State.EVENT_LIST.value)),
+            ]
         ]
-    ]
+
+    else:
+        keyboard = [
+            [
+                InlineKeyboardButton(text="Registration", callback_data=str(State.REGISTER.value)),
+                InlineKeyboardButton(text="Login", callback_data=str(State.LOGIN.value))
+            ]
+        ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 

@@ -3,7 +3,14 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from dotenv import load_dotenv
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from telegram.ext.conversationhandler import ConversationHandler
-from callbacks import start, event, event_instance, back_main_menu, register
+from callbacks import (
+    start, 
+    event, 
+    event_instance, 
+    back_main_menu, 
+    register, 
+    login
+)
 from util.enums import State, Constant
 import os
 import logging
@@ -26,13 +33,13 @@ def main():
         states={
             State.REGISTER_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
-                    register.prompt_info_callback, 
+                    register.register_prompt_info_callback, 
                     pattern=f"^{Constant.EMAIL.value}|{Constant.FIRST_NAME.value}|{Constant.LAST_NAME.value}|{Constant.PASSWORD.value}$"
                 ),
             ],
             State.REGISTER_GET_INFO.value: [MessageHandler(
                 Filters.text & ~Filters.command, 
-                register.get_info_callback
+                register.register_get_info_callback
             )]
         },
         fallbacks=[
@@ -42,8 +49,45 @@ def main():
                 pattern=f"^{str(State.END.value)}$"
             ),
             CallbackQueryHandler(
-                register.submit_info_callback,
+                register.register_submit_info_callback,
                 pattern=f"^{State.REGISTER_SUBMIT.value}$"
+            )
+        ],
+        map_to_parent={
+            # Return to parent conversation
+            State.END.value: State.FEATURE_SELECTION.value
+        }
+    )
+
+    login_conv_handler = ConversationHandler(
+        entry_points=[CallbackQueryHandler(login.login_intro_callback, pattern=f"^{str(State.LOGIN.value)}")],
+        states={
+            State.LOGIN_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    login.login_prompt_info_callback,
+                    pattern=f"^{str(Constant.PASSWORD.value)}$"
+                )
+            ],
+            State.LOGIN_GET_INFO.value: [
+                MessageHandler(
+                    Filters.text & ~Filters.command, 
+                    login.login_get_info_callback
+                )
+            ]
+        },
+        fallbacks=[
+            CommandHandler("stop", stop.stop_callback),
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{str(State.END.value)}$"
+            ),
+            CallbackQueryHandler(
+                login.login_intro_callback,
+                pattern=f"^{str(State.START_OVER.value)}$"
+            ),
+            CallbackQueryHandler(
+                login.login_submit_info_callback,
+                pattern=f"^{State.LOGIN_SUBMIT.value}$"
             )
         ],
         map_to_parent={
@@ -75,16 +119,16 @@ def main():
         }
     )
 
-    feature_selection_handlers = [
-        register_feature_conv,
-        event_feature_conv,
-    ]
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start.start_callback)],
         states={
             State.SHOWING.value: [CallbackQueryHandler(start.start_callback, pattern=f"^{str(State.END.value)}$")],
-            State.FEATURE_SELECTION.value: feature_selection_handlers,
+            State.FEATURE_SELECTION.value: [
+                register_feature_conv,
+                login_conv_handler,
+                event_feature_conv,
+            ],
             State.STOPPING.value: [CommandHandler("stop", stop.stop_callback)],
         },
         fallbacks=[CommandHandler("stop", stop.stop_callback)]

@@ -15,12 +15,16 @@ class State(Enum):
     REGISTER_SELECTING_ACTION = 6
     REGISTER_GET_INFO = 7
     REGISTER_SUBMIT = 8
+    # State definition for login feature
+    LOGIN_SELECTING_ACTION = 9
+    LOGIN_GET_INFO = 10
+    LOGIN_SUBMIT = 11
     # State definitions for Event feature
-    EVENT_INSTANCE_LIST = 9
+    EVENT_INSTANCE_LIST = 12
     # Meta states
-    STOPPING = 10
-    SHOWING = 11
-    START_OVER = 12 
+    STOPPING = 13
+    SHOWING = 14
+    START_OVER = 15 
     # Shortcut to end conversation
     END = ConversationHandler.END
 
@@ -28,8 +32,8 @@ class State(Enum):
 class Constant(Enum):
     
     # Constant definition for authentication
-    USERNAME = 13
-    EMAIL = 14
-    FIRST_NAME = 15
-    LAST_NAME = 16
-    PASSWORD = 17
+    USERNAME = 16
+    EMAIL = 17
+    FIRST_NAME = 18
+    LAST_NAME = 19
+    PASSWORD = 20

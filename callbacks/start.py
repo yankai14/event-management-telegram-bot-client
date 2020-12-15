@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-from util.enums import State, Constant
+from util.enums import State
 
 
 def start_callback(update:Update, context: CallbackContext) -> None:
@@ -13,6 +13,9 @@ def start_callback(update:Update, context: CallbackContext) -> None:
         [
             InlineKeyboardButton(text="Event List", callback_data=str(State.EVENT_LIST.value)),
             InlineKeyboardButton(text="Registration", callback_data=str(State.REGISTER.value))
+        ],
+        [
+            InlineKeyboardButton(text="Login", callback_data=str(State.LOGIN.value))
         ]
     ]
 
@@ -20,7 +23,7 @@ def start_callback(update:Update, context: CallbackContext) -> None:
 
     if context.user_data.get(State.START_OVER.value):
         update.callback_query.answer()
-        update.callback_query.edit_message_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        update.callback_query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
     else:
         update.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
 

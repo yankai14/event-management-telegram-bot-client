@@ -5,9 +5,9 @@ from callbacks import start
 from util.enums import State, Constant
 from util.serializers import RegistrationSerializer
 from util.errors import catch_error, catch_error_callback_query, BackendError
+import time
 
 
-@catch_error_callback_query
 def register_intro_callback(update:Update, context: CallbackContext) -> None:
 
     query = update.callback_query
@@ -27,22 +27,23 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     if not context.user_data[State.START_OVER.value]:
+        query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
         userId = query.from_user["id"]
-        try:
-            response = requests.get(f"http://127.0.0.1:8000/auth/user?username={userId}")
-        except ConnectionError:
-            raise ConnectionError("Internal Server Error")
+        response = requests.get(f"http://127.0.0.1:8000/auth/user?username={userId}")
         
         if response.status_code == 200:
-            msg = "You are already registered"
-            query.edit_message_text(msg, parse_mode='MarkdownV2')
+            context.user_data[State.START_OVER.value] = True
+            msg = "You are already registered, returning to main menu\.\.\.\."
+            query.message.reply_text(msg, parse_mode='MarkdownV2')
+            time.sleep(1)
+            start.start_callback(update, context)
             return State.END.value
 
         context.user_data["registrationData"] = {Constant.USERNAME.value: userId}
         msg = "Lets get some of the information required"
-        query.edit_message_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
 
     else:
         msg = "Got it\! Please select some feature to update"
@@ -52,9 +53,10 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
 
 
 @catch_error_callback_query
-def prompt_info_callback(update:Update, context: CallbackContext) -> None:
+def register_prompt_info_callback(update:Update, context: CallbackContext) -> None:
 
     query = update.callback_query
+    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
     feature = Constant(int(query.data)).name.replace("_", " ")
     context.user_data["currentFeature"] = query.data
 
@@ -64,13 +66,13 @@ def prompt_info_callback(update:Update, context: CallbackContext) -> None:
         msg = f"Type your *{feature}*"
 
     query.answer()
-    query.edit_message_text(msg, parse_mode='MarkdownV2')
+    query.message.reply_text(msg, parse_mode='MarkdownV2')
 
     return State.REGISTER_GET_INFO.value
 
 
 @catch_error
-def get_info_callback(update:Update, context: CallbackContext) -> None:
+def register_get_info_callback(update:Update, context: CallbackContext) -> None:
 
     currentFeature = Constant(int(context.user_data["currentFeature"])).value
     context.user_data["registrationData"][currentFeature] = update.message.text
@@ -80,20 +82,21 @@ def get_info_callback(update:Update, context: CallbackContext) -> None:
 
 
 @catch_error_callback_query
-def submit_info_callback(update: Update, context: CallbackContext) -> None:
+def register_submit_info_callback(update: Update, context: CallbackContext) -> None:
     
     query = update.callback_query
+    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
     registrationData = context.user_data["registrationData"]
     serializer = RegistrationSerializer()
     payload = serializer.dump(registrationData)
-    try:
-        response = requests.post("http://127.0.0.1:8000/auth/user", json=payload)
-    except ConnectionError:
-        raise ConnectionError
+    response = requests.post("http://127.0.0.1:8000/auth/user", json=payload)
 
-    if response.status_code == 201:   
-        msg = "Registered"
-        query.edit_message_text(msg, parse_mode='MarkdownV2')
+    if response.status_code == 201:
+        msg = "Registered, please login to enjoy other features\. Returning to main menu\.\.\.\."
+        del context.user_data["registrationData"]
+        del context.user_data["currentFeature"]
+        time.sleep(1.5)
+        query.message.reply_text(msg, parse_mode='MarkdownV2')
         start.start_callback(update, context)
         return State.END.value
 

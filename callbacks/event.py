@@ -7,6 +7,7 @@ from util.enums import State
 def event_callback(update:Update, context: CallbackContext) -> None:
     
     query = update.callback_query
+    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
     response = requests.get("http://127.0.0.1:8000/event")
     if response.status_code == 200:
         response_data = response.json()
@@ -14,7 +15,7 @@ def event_callback(update:Update, context: CallbackContext) -> None:
 
         keyboard = []
         msg = "*These are the events available for your participation*\n\n"
-        
+
         for result in results:
             msg += f"{result['eventCode']}:\n"
             msg += f"Name: {result['name']}\n"
@@ -29,7 +30,7 @@ def event_callback(update:Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         query.answer()
-        query.message.edit_text(
+        query.message.reply_text(
             msg, 
             reply_markup=reply_markup, 
             parse_mode='MarkdownV2'

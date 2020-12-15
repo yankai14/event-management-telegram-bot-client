@@ -8,6 +8,7 @@ from util.enums import State
 def event_instance_callback(update:Update, context: CallbackContext) -> None:
 
     query = update.callback_query
+    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
     eventCode = query.data.split("=")[1]
     response = requests.get("http://127.0.0.1:8000/event/event-instance?eventCode={eventCode}?isCompleted=False")
     if response.status_code == 200:
@@ -41,5 +42,5 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         query.answer()
-        query.edit_message_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
         

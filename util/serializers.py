@@ -1,5 +1,5 @@
-from marshmallow import Schema, fields
-from marshmallow.validate import Length, Regexp
+from marshmallow import Schema, fields, INCLUDE
+from marshmallow.validate import Regexp
 from util.errors import ValidationError
 from util.enums import Constant
 
@@ -31,9 +31,31 @@ class LoginSerializer(Schema):
 
     def dump(self, obj):
         obj = {Constant(k).name.lower(): v for k,v in obj.items()}
-        print(obj)
         errors = self.validate(obj)
         if errors:
             raise ValidationError(details=errors, message="Password must be minimum eight characters, at least one letter and one number")
 
         return super().dump(obj)
+
+
+class EnrollmentSerializer(Schema):
+
+    username = fields.Int(required=True)
+    eventInstanceCode = fields.Str(required=True)
+    role = fields.Int(required=True)
+
+    class Meta:
+        unknown = INCLUDE
+
+    def dump(self, obj):
+        errors = self.validate(obj)
+        if errors:
+            raise ValidationError(details=errors, message=errors)
+
+        dataRequired = {
+            "username": obj.get("username"),
+            "eventInstanceCode": obj.get("eventInstanceCode"),
+            "role": obj.get("role")
+        }
+
+        return super().dump(dataRequired)

@@ -6,7 +6,7 @@ from telegram.ext.conversationhandler import ConversationHandler
 from callbacks import (
     start, 
     event, 
-    event_instance, 
+    enrollment, 
     back_main_menu, 
     register, 
     login
@@ -96,20 +96,64 @@ def main():
         }
     )
 
-    event_feature_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(event.event_callback, pattern=f"^{State.EVENT_LIST.value}$")],
-        states = {
-            State.EVENT_INSTANCE_LIST.value: [
+    enrollment_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(
+                enrollment.enrollment_prompt_info_callback,
+                pattern=f"^{Constant.ENROLL.value}$"
+            )
+        ],
+        states={
+            State.ENROLLMENT_GET_INFO.value: [
+                MessageHandler(
+                    Filters.text & ~Filters.command, 
+                    enrollment.enrollment_get_info_callback
+                )
+            ],
+            State.ENROLLMENT_SUBMIT.value: [
                 CallbackQueryHandler(
-                    event_instance.event_instance_callback,
-                    pattern=f"^{State.EVENT_INSTANCE_LIST.value}"
+                    enrollment.enrollment_submit_info_callback,
+                    pattern=f"^{Constant.CHECKOUT.value}$"
                 )
             ]
         },
         fallbacks=[
             CallbackQueryHandler(
+                enrollment.enrollment_prompt_info_callback,
+                pattern=f"^{State.START_OVER.value}$"
+            ),
+            CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{str(State.END.value)}$"
+                pattern=f"^{State.END.value}$"
+            ),
+            CommandHandler("stop", stop.stop_callback)
+        ],
+        map_to_parent={
+            # Return to parent conversation
+            State.END.value: State.END.value
+        }
+    )
+
+    event_feature_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(
+                event.event_callback, 
+                pattern=f"^{State.EVENT_LIST.value}$"
+            )
+        ],
+        states = {
+            State.EVENT_INSTANCE_LIST.value: [
+                CallbackQueryHandler(
+                    event.event_instance_callback,
+                    pattern=f"^{State.EVENT_INSTANCE_LIST.value}"
+                )
+            ],
+            State.ENROLLMENT_SELECTING_ACTION.value: [enrollment_conv],
+        },
+        fallbacks=[
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{State.END.value}$"
             ),
             CommandHandler("stop", stop.stop_callback)
         ],

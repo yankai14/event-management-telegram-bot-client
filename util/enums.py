@@ -21,10 +21,15 @@ class State(Enum):
     LOGIN_SUBMIT = 11
     # State definitions for Event feature
     EVENT_INSTANCE_LIST = 12
+    # State definitions for Enrollment feature
+    ENROLLMENT_SELECTING_ACTION = 13
+    ENROLLMENT_GET_INFO = 14
+    ENROLLMENT_SUBMIT = 15
+
     # Meta states
-    STOPPING = 13
-    SHOWING = 14
-    START_OVER = 15 
+    STOPPING = 16
+    SHOWING = 17
+    START_OVER = 18 
     # Shortcut to end conversation
     END = ConversationHandler.END
 
@@ -32,8 +37,12 @@ class State(Enum):
 class Constant(Enum):
     
     # Constant definition for authentication
-    USERNAME = 16
-    EMAIL = 17
-    FIRST_NAME = 18
-    LAST_NAME = 19
-    PASSWORD = 20
+    USERNAME = 19
+    EMAIL = 20
+    FIRST_NAME = 21
+    LAST_NAME = 22
+    PASSWORD = 23
+
+    # Constant definition for payment
+    ENROLL = 23
+    CHECKOUT = 24

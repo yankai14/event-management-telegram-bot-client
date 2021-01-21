@@ -49,9 +49,9 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
     query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
     headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
     eventCode = query.data.split("=")[1]
-    response = requests.get("http://127.0.0.1:8000/event/event-instance?eventCode={eventCode}?isCompleted=False", headers=headers)
+    response = requests.get("http://127.0.0.1:8000/event-instance?eventCode={eventCode}?isCompleted=False", headers=headers)
     if response.status_code == 200:
-        responseData = response.json()
+        responseData = response.json().get("results")
         msg = f"*Available slots for {eventCode}*\n\n"
         for eventInstance in responseData:
             

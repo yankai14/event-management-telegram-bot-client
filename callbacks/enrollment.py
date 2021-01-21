@@ -23,7 +23,7 @@ def enrollment_get_info_callback(update:Update, context: CallbackContext) -> Non
 
     eventInstanceCode = update.message.text
     headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
-    response = requests.get(f"http://127.0.0.1:8000/event/event-instance/{eventInstanceCode}", headers=headers)
+    response = requests.get(f"http://127.0.0.1:8000/event-instance/{eventInstanceCode}", headers=headers)
     if response.status_code == 200:
         eventInstance = response.json()
         context.user_data["enrollmentData"] = eventInstance
@@ -64,6 +64,8 @@ def enrollment_submit_info_callback(update:Update, context: CallbackContext) -> 
     payload = serializer.dump(enrollmentData)
 
     headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
+    enrollmentExist = requests.get(f"http://127.0.0.1:8000/enrollment?username={", headers=headers)
+
     response = requests.post("http://127.0.0.1:8000/enrollment", json=payload, headers=headers)
 
     if response.status_code == 201:   

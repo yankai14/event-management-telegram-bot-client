@@ -12,6 +12,7 @@ from callbacks import (
     login
 )
 from util.enums import State, Constant
+from util.config import ENV
 import os
 import logging
 
@@ -24,8 +25,7 @@ logging.basicConfig(
 
 
 def main():
-
-    updater = Updater(token=os.getenv("TELEGRAM_BOT_TOKEN"), use_context=True)
+    updater = Updater(token=ENV.TELEGRAM_BOT_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
     register_feature_conv = ConversationHandler(

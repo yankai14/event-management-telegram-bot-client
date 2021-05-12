@@ -1,7 +1,7 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from callbacks import start
-from util.errors import catch_error, catch_error_callback_query, BackendError
+from util.errors import catch_error, BackendError
 from util.serializers import LoginSerializer
 from util.serializers import LoginSerializer
 from util.enums import State, Constant
@@ -11,7 +11,7 @@ import requests
 
 def login_intro_callback(update: Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
+    query = update if update.message else update.callback_query
 
     keyboard = [
             [
@@ -30,15 +30,15 @@ def login_intro_callback(update: Update, context: CallbackContext) -> None:
             Constant.USERNAME.value: query.from_user["id"]
         }
         msg = "Enter password or return to starting menu"
-        query.message.reply_text(msg, reply_markup=reply_markup)
+        query.message.edit_text(msg, reply_markup=reply_markup)
     else:
         msg = "Got it\! Submit or update the password you keyed in"
-        update.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
         
     return State.LOGIN_SELECTING_ACTION.value
 
 
-
+@catch_error
 def login_prompt_info_callback(update: Update, context: CallbackContext) -> None:
 
     query = update.callback_query
@@ -57,7 +57,7 @@ def login_prompt_info_callback(update: Update, context: CallbackContext) -> None
     return State.LOGIN_GET_INFO.value
 
 
-
+@catch_error
 def login_get_info_callback(update: Update, context: CallbackContext) -> None:
 
     currentFeature = Constant(int(context.user_data["currentFeature"])).value
@@ -66,7 +66,7 @@ def login_get_info_callback(update: Update, context: CallbackContext) -> None:
     return login_intro_callback(update, context)
 
 
-
+@catch_error
 def login_submit_info_callback(update: Update, context: CallbackContext) -> None:
 
     query = update.callback_query
@@ -82,10 +82,8 @@ def login_submit_info_callback(update: Update, context: CallbackContext) -> None
         msg = "Logged In, returning to main menu\.\.\.\."
         context.user_data.pop("loginData", None)
         context.user_data.pop("currentFeature", None)
-        time.sleep(1.5)
         query.message.reply_text(msg, parse_mode='MarkdownV2')
         start.start_callback(update, context)
-
         return State.END.value
 
     elif response.status_code == 400:
@@ -106,7 +104,7 @@ def login_submit_info_callback(update: Update, context: CallbackContext) -> None
         raise BackendError
 
 
-
+@catch_error
 def login_back__to_intro_callback(update: Update, context: CallbackContext) -> None:
     
     context.user_data[State.START_OVER.value] = True

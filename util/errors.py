@@ -1,14 +1,16 @@
+from types import FunctionType
 from telegram import Update
 from telegram.ext import CallbackContext
 from functools import wraps
+from util.enums import State
 import logging
-
 
 class ValidationError(Exception):
 
-    def __init__(self, details: str, message: str="Missing or Invalid Fields"):
+    def __init__(self, details: str, message: str="Missing or Invalid Fields", callback: FunctionType = None):
         self.details = details
         self.message = message
+        self.callback = callback
         return super().__init__(self.message)
 
 
@@ -24,48 +26,20 @@ def catch_error(f):
     @wraps(f)
     def wrap(update: Update, context: CallbackContext):
 
-        try:
-            return f(update, context)
-        except ValidationError as e:
-            logging.info(f"Client Side Information: {update.message}")
-            logging.error(e.details)
-            update.message.reply_text(e.message)
-        except Exception as e:
-            # Add info to error tracking in sentry
-            # client.user_context({
-            #     "username": update.message.from_user.username,
-            #     "message": update.message.text
-            # })
-
-            # client.captureException()
-            logging.info(f"Client Side Information: {update.message}")
-            logging.error(str(e))
-            update.message.reply_text("Internal Server Error")
-
-    return wrap
-
-
-def catch_error_callback_query(f):
-    @wraps(f)
-    def wrap(update: Update, context: CallbackContext):
+        query = update if update.message else update.callback_query
 
         try:
             return f(update, context)
         except ValidationError as e:
             logging.info(f"Client Side Information: {update.message}")
             logging.error(e.details)
-            update.callback_query.message.reply_text(e.message)
+            query.message.edit_text(e.message)
+            context.user_data[State.START_OVER.value] = True
+            if e.callback:
+                e.callback(update, context)
         except Exception as e:
-            # Add info to error tracking in sentry
-            # client.user_context({
-            #     "username": update.message.from_user.username,
-            #     "message": update.message.text
-            # })
-
-            # client.captureException()
-            logging.info(f"Client Side Information: {update.callback_query}")
+            logging.info(f"Client Side Information: {update.message}")
             logging.error(str(e))
-            update.callback_query.message.reply_text("Internal Server Error")
-            
+            query.message.reply_text("Internal Server Error")
 
     return wrap

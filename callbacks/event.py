@@ -22,17 +22,16 @@ def event_callback(update:Update, context: CallbackContext) -> None:
             msg += f"{result['eventCode']}:\n"
             msg += f"Name: {result['name']}\n"
             msg += f"Description: {result['description']}\n\n"
-
             keyboard.append([InlineKeyboardButton(
-                result['name'], 
+                text=result['name'], 
                 callback_data=f"{State.EVENT_INSTANCE_LIST.value}={result['eventCode']}"
             )])
 
-        keyboard.append([InlineKeyboardButton("Back", callback_data=str(State.END.value))])
+        keyboard.append([InlineKeyboardButton(text="Back", callback_data=str(State.END.value))])
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         query.answer()
-        query.message.reply_text(
+        query.message.edit_text(
             msg, 
             reply_markup=reply_markup, 
             parse_mode='MarkdownV2'
@@ -75,8 +74,8 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
 
         keyboard = [
             [
-                InlineKeyboardButton("Enroll", callback_data=str(Constant.ENROLL.value)),
-                InlineKeyboardButton("Back", callback_data=str(State.END.value))
+                InlineKeyboardButton(text="Enroll", callback_data=str(Constant.ENROLL.value)),
+                InlineKeyboardButton(text="Back", callback_data=str(State.END.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -85,6 +84,3 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
         query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
 
         return State.ENROLLMENT_SELECTING_ACTION.value
-
-
-    

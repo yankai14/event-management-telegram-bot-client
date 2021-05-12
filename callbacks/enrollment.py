@@ -26,6 +26,7 @@ def enrollment_get_info_callback(update:Update, context: CallbackContext) -> Non
     response = requests.get(f"http://127.0.0.1:8000/event-instance/{eventInstanceCode}", headers=headers)
     if response.status_code == 200:
         eventInstance = response.json()
+        print(eventInstance)
         context.user_data["enrollmentData"] = eventInstance
         context.user_data["enrollmentData"]["username"] = update.message.from_user["id"]
         context.user_data["enrollmentData"]["role"] = 1
@@ -64,27 +65,31 @@ def enrollment_submit_info_callback(update:Update, context: CallbackContext) -> 
     payload = serializer.dump(enrollmentData)
 
     headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
-    enrollmentExist = requests.get(f"http://127.0.0.1:8000/enrollment?username={", headers=headers)
+    enrollmentExist = requests.get(
+        f"http://127.0.0.1:8000/enrollment?user={enrollmentData['username']}&eventInstance={enrollmentData['eventInstanceCode']}", headers=headers
+    ).json().get("count")
 
-    response = requests.post("http://127.0.0.1:8000/enrollment", json=payload, headers=headers)
+    if not enrollmentExist:
 
-    if response.status_code == 201:   
-        msg = "Enrolled to course, returning to main menu\.\.\.\."
-        context.user_data[State.START_OVER.value] = True
-        context.user_data.pop("enrollmentData", None)
-        time.sleep(1.5)
-        query.message.reply_text(msg, parse_mode='MarkdownV2')
-        start.start_callback(update, context)
-        return State.END.value
+        if float(enrollmentData["fee"]) == 0:
 
-    elif response.status_code == 409:
-        msg = "User is already enrolled\.\.\.\."
-        context.user_data[State.START_OVER.value] = True
-        context.user_data.pop("enrollmentData", None)
-        time.sleep(1.5)
-        query.message.reply_text(msg, parse_mode='MarkdownV2')
-        start.start_callback(update, context)
-        return State.END.value
+            response = requests.post("http://127.0.0.1:8000/enrollment", json=payload, headers=headers)
+            print(response.json())
+
+            if response.status_code == 201:   
+                msg = "Enrolled to course, returning to main menu\.\.\.\."
+                context.user_data[State.START_OVER.value] = True
+                context.user_data.pop("enrollmentData", None)
+                query.message.reply_text(msg, parse_mode='MarkdownV2')
+                start.start_callback(update, context)
+                return State.END.value
+
+            else:
+                BackendError(details=response.status_code)
 
     else:
-        BackendError(details=response.status_code)
+        msg = "You are already enrolled, returning to main menu\.\.\.\."
+        context.user_data[State.START_OVER.value] = True
+        query.message.reply_text(msg, parse_mode='MarkdownV2')
+        start.start_callback(update, context)
+        return State.END.value

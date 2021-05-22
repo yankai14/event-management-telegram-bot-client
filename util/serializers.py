@@ -1,8 +1,6 @@
 from types import FunctionType
 from marshmallow import Schema, fields, INCLUDE
 from util.errors import ValidationError
-from util.enums import Constant
-
 class RegistrationSerializer(Schema):
 
     username = fields.Int(required=True)
@@ -12,7 +10,6 @@ class RegistrationSerializer(Schema):
     password = fields.Str(required=True)
 
     def dump(self, obj, callback: FunctionType):
-        obj = {Constant(k).name.lower(): v for k,v in obj.items()}
         errors = self.validate(obj)
         if errors:
             raise ValidationError(details=errors, message="Invalid fields given, please update your information", callback=callback)
@@ -24,11 +21,10 @@ class LoginSerializer(Schema):
     username = fields.Int(required=True)
     password = fields.Str(required=True)
 
-    def dump(self, obj):
-        obj = {Constant(k).name.lower(): v for k,v in obj.items()}
+    def dump(self, obj, callback: FunctionType):
         errors = self.validate(obj)
         if errors:
-            raise ValidationError(details=errors, message=errors)
+            raise ValidationError(details=errors, message=errors, callback=callback)
 
         return super().dump(obj)
 

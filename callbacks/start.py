@@ -1,7 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from util.enums import State
-
+from util.api_service import ApiService
+from util.telegram_service import TelegramService
 
 def start_callback(update:Update, context: CallbackContext) -> None:
 
@@ -18,20 +19,25 @@ def start_callback(update:Update, context: CallbackContext) -> None:
         ]
 
     else:
-        keyboard = [
-            [
-                InlineKeyboardButton(text="Registration", callback_data=str(State.REGISTER.value)),
-                InlineKeyboardButton(text="Login", callback_data=str(State.LOGIN.value))
+        userId = TelegramService.get_user_id(update)
+        is_registered = ApiService.user_already_registered(userId)
+        
+        if is_registered:
+            keyboard = [
+                [
+                    InlineKeyboardButton(text="Login", callback_data=str(State.LOGIN.value))
+                ]
             ]
-        ]
+        else:
+            keyboard = [
+                [
+                    InlineKeyboardButton(text="Registration", callback_data=str(State.REGISTER.value)),
+                ]
+            ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-
-    if context.user_data.get(State.START_OVER.value):
-        update.callback_query.answer()
-        update.callback_query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
-    else:
-        update.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
-
+    
+    TelegramService.reply_text(msg, update, reply_markup)
     context.user_data[State.START_OVER.value] = False
+
     return State.FEATURE_SELECTION.value

@@ -1,21 +1,20 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from callbacks import start
+from http import HTTPStatus
 from util.errors import catch_error, BackendError
 from util.serializers import LoginSerializer
 from util.serializers import LoginSerializer
-from util.enums import State, Constant
-import time
-import requests
+from util.constants import State, Authentication, Other
+from util.api_service import ApiService
+from util.telegram_service import TelegramService
 
 
 def login_intro_callback(update: Update, context: CallbackContext) -> None:
 
-    query = update if update.message else update.callback_query
-
     keyboard = [
             [
-                InlineKeyboardButton(text="Password", callback_data=Constant.PASSWORD.value),
+                InlineKeyboardButton(text="Password", callback_data=Authentication.PASSWORD),
             ],
             [
                 InlineKeyboardButton(text="Done", callback_data=State.LOGIN_SUBMIT.value),
@@ -25,15 +24,19 @@ def login_intro_callback(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if not context.user_data.get(State.START_OVER.value):
-        query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-        context.user_data["loginData"] = {
-            Constant.USERNAME.value: query.from_user["id"]
+        TelegramService.remove_prev_keyboard(update)
+        user_id = TelegramService.get_user_id(update)
+
+        context.user_data[Authentication.LOGIN_DATA] = {
+            Authentication.USERNAME: user_id,
+            Authentication.PASSWORD: None
         }
+
         msg = "Enter password or return to starting menu"
-        query.message.edit_text(msg, reply_markup=reply_markup)
+        TelegramService.edit_reply_text(msg, update, reply_markup)
     else:
-        msg = "Got it\! Submit or update the password you keyed in"
-        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        msg = "Submit or update the password you keyed in"
+        TelegramService.reply_text(msg, update, reply_markup)
         
     return State.LOGIN_SELECTING_ACTION.value
 
@@ -41,18 +44,16 @@ def login_intro_callback(update: Update, context: CallbackContext) -> None:
 @catch_error
 def login_prompt_info_callback(update: Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
-    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    feature = Constant(int(query.data)).name.replace("_", " ")
-    context.user_data["currentFeature"] = query.data
+    TelegramService.remove_prev_keyboard(update)
+    feature = TelegramService.get_callback_query_data(update)
+    context.user_data[Other.CURRENT_FEATURE] = feature
     
-    if context.user_data["loginData"].get(int(query.data)):
+    if context.user_data[Authentication.LOGIN_DATA].get(feature):
         msg = f"You are updating *{feature}*, type your *{feature}* here"
     else:
         msg = f"Type your *{feature}*"
     
-    query.answer()
-    query.message.reply_text(msg, parse_mode='MarkdownV2')
+    TelegramService.reply_text(msg, update)
 
     return State.LOGIN_GET_INFO.value
 
@@ -60,8 +61,8 @@ def login_prompt_info_callback(update: Update, context: CallbackContext) -> None
 @catch_error
 def login_get_info_callback(update: Update, context: CallbackContext) -> None:
 
-    currentFeature = Constant(int(context.user_data["currentFeature"])).value
-    context.user_data["loginData"][currentFeature] = update.message.text
+    current_feature = context.user_data.get(Other.CURRENT_FEATURE)
+    context.user_data[Authentication.LOGIN_DATA][current_feature] = update.message.text
     context.user_data[State.START_OVER.value] = True
     return login_intro_callback(update, context)
 
@@ -69,43 +70,23 @@ def login_get_info_callback(update: Update, context: CallbackContext) -> None:
 @catch_error
 def login_submit_info_callback(update: Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
-    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    loginData = context.user_data["loginData"]
+    login_data = context.user_data[Authentication.LOGIN_DATA]
     serializer = LoginSerializer()
-    payload = serializer.dump(loginData)
+    payload = serializer.dump(login_data, login_intro_callback)
+    _ ,status_code = ApiService.login(payload, context)
 
-    response = requests.post("http://127.0.0.1:8000/auth/login", json=payload)
-
-    if response.status_code == 200:   
-        context.user_data["AUTH_TOKEN"] = response.json()["token"]
-        msg = "Logged In, returning to main menu\.\.\.\."
-        context.user_data.pop("loginData", None)
-        context.user_data.pop("currentFeature", None)
-        query.message.reply_text(msg, parse_mode='MarkdownV2')
+    if status_code == HTTPStatus.OK:
+        TelegramService.remove_prev_keyboard(update)
+        msg = "Logged In, returning to main menu...."
+        TelegramService.reply_text(msg, update)
         start.start_callback(update, context)
         return State.END.value
 
-    elif response.status_code == 400:
+    elif status_code == 400:
+        TelegramService.remove_prev_keyboard(update)
         msg = "Unsuccessful login, please try again"
-        context.user_data.pop(State.START_OVER.value, None)
-        keyboard = [
-            [
-                InlineKeyboardButton(text="Try Again", callback_data=State.START_OVER.value),
-                InlineKeyboardButton(text="Main Menu", callback_data=State.END.value)
-            ]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
-
-        return State.LOGIN_SELECTING_ACTION.value
+        TelegramService.reply_text(msg, update)
+        return login_intro_callback(update, context)
 
     else:
         raise BackendError
-
-
-@catch_error
-def login_back__to_intro_callback(update: Update, context: CallbackContext) -> None:
-    
-    context.user_data[State.START_OVER.value] = True
-    return login_intro_callback(update, context)

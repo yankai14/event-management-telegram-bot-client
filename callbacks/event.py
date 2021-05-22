@@ -1,65 +1,58 @@
+from http import HTTPStatus
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 import requests
 from dateutil import parser
-from util.enums import State, Constant
+from util.enums import Constant
+from util.constants import State, Enrollment, Event, EventInstance, Authentication
+from util.api_service import ApiService
+from util.telegram_service import TelegramService
 
 
 def event_callback(update:Update, context: CallbackContext) -> None:
     
-    query = update.callback_query
-    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
-    response = requests.get("http://127.0.0.1:8000/event", headers=headers)
-    if response.status_code == 200:
-        response_data = response.json()
-        results = response_data["results"]
-
+    TelegramService.remove_prev_keyboard(update)
+    events, status_code = ApiService.get_event_list(context)
+    if status_code == HTTPStatus.OK:
         keyboard = []
         msg = "*These are the events available for your participation*\n\n"
 
-        for result in results:
-            msg += f"{result['eventCode']}:\n"
-            msg += f"Name: {result['name']}\n"
-            msg += f"Description: {result['description']}\n\n"
+        for event in events:
+            msg += f"{event[Event.CODE]}:\n"
+            msg += f"Name: {event[Event.NAME]}\n"
+            msg += f"Description: {event[Event.DESCRIPTION]}\n\n"
             keyboard.append([InlineKeyboardButton(
-                text=result['name'], 
-                callback_data=f"{State.EVENT_INSTANCE_LIST.value}={result['eventCode']}"
+                text=event[Event.NAME], 
+                callback_data=f"{State.EVENT_INSTANCE_LIST.value}={event[Event.CODE]}"
             )])
 
         keyboard.append([InlineKeyboardButton(text="Back", callback_data=str(State.END.value))])
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        query.answer()
-        query.message.edit_text(
-            msg, 
-            reply_markup=reply_markup, 
-            parse_mode='MarkdownV2'
-        )
+        TelegramService.reply_text(msg, update, reply_markup)
+        context.user_data[Event.EVENTS] = events
 
-        context.user_data["events"] = results
+    #TODO: Handle HTTPStatus 500 and 400
 
     return State.EVENT_INSTANCE_LIST.value
 
 
 def event_instance_callback(update:Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
-    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    headers = {"Authorization": "Token " + context.user_data.get("AUTH_TOKEN")}
-    eventCode = query.data.split("=")[1]
-    response = requests.get("http://127.0.0.1:8000/event-instance?eventCode={eventCode}?isCompleted=False", headers=headers)
-    if response.status_code == 200:
-        responseData = response.json().get("results")
-        msg = f"*Available slots for {eventCode}*\n\n"
-        for eventInstance in responseData:
+    TelegramService.remove_prev_keyboard(update)
+    event_code = TelegramService.get_callback_query_data(update).split("=")[1]
+    event_instances, status_code = ApiService.get_event_instance_list(event_code, context)
+    
+    if status_code == HTTPStatus.OK:
+        msg = f"*Available slots for {event_code}*\n\n"
+        for event_instance in event_instances:
             
-            eventInstanceCode = eventInstance.get("eventInstanceCode")
-            location = eventInstance.get("location")
-            dates = eventInstance.get("dates")
-            fee = eventInstance.get("fee")
+            event_instance_code = event_instance.get(EventInstance.CODE)
+            location = event_instance.get(EventInstance.LOCATION)
+            dates = event_instance.get(EventInstance.DATES)
+            fee = event_instance.get(EventInstance.FEE)
             
-            msg += f"*Code: {eventInstanceCode}\n*"
+            msg += f"*Code: {event_instance_code}\n*"
             msg += f"Location: {location}\n"
             msg += f"Fees: {fee}\n"
             msg += f"Schedule:\n"
@@ -69,18 +62,15 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
                 msg += f"- Session {count}: {date.date()} \({date.date().strftime('%A')}\)\n"
 
             msg +="\n"
-        msg = msg.replace("-", "\-")
-        msg = msg.replace(".", "\.")
 
         keyboard = [
             [
-                InlineKeyboardButton(text="Enroll", callback_data=str(Constant.ENROLL.value)),
+                InlineKeyboardButton(text="Enroll", callback_data=Enrollment.ENROLL),
                 InlineKeyboardButton(text="Back", callback_data=str(State.END.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        query.answer()
-        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        TelegramService.reply_text(msg, update, reply_markup)
 
         return State.ENROLLMENT_SELECTING_ACTION.value

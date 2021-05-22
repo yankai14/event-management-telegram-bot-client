@@ -11,7 +11,8 @@ from callbacks import (
     register, 
     login
 )
-from util.enums import State, Constant
+from util.enums import Constant
+from util.constants import Enrollment, State, Authentication
 from util.config import ENV
 import os
 import logging
@@ -34,7 +35,7 @@ def main():
             State.REGISTER_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
                     register.register_prompt_info_callback, 
-                    pattern=f"^{Constant.EMAIL.value}|{Constant.FIRST_NAME.value}|{Constant.LAST_NAME.value}|{Constant.PASSWORD.value}$"
+                    pattern=f"^{Authentication.EMAIL}|{Authentication.FIRST_NAME}|{Authentication.LAST_NAME}|{Authentication.PASSWORD}$"
                 ),
             ],
             State.REGISTER_GET_INFO.value: [MessageHandler(
@@ -65,7 +66,7 @@ def main():
             State.LOGIN_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
                     login.login_prompt_info_callback,
-                    pattern=f"^{str(Constant.PASSWORD.value)}$"
+                    pattern=f"^{Authentication.PASSWORD}$"
                 )
             ],
             State.LOGIN_GET_INFO.value: [
@@ -100,7 +101,7 @@ def main():
         entry_points=[
             CallbackQueryHandler(
                 enrollment.enrollment_prompt_info_callback,
-                pattern=f"^{Constant.ENROLL.value}$"
+                pattern=f"^{Enrollment.ENROLL}$"
             )
         ],
         states={
@@ -113,7 +114,7 @@ def main():
             State.ENROLLMENT_SUBMIT.value: [
                 CallbackQueryHandler(
                     enrollment.enrollment_submit_info_callback,
-                    pattern=f"^{Constant.CHECKOUT.value}$"
+                    pattern=f"^{Enrollment.CHECKOUT}$"
                 )
             ]
         },

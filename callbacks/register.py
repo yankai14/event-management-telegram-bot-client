@@ -1,23 +1,25 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from http import HTTPStatus
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, user
 from telegram.ext import CallbackContext
-import requests
 from callbacks import start
-from util.enums import State, Constant
+from util.constants import State, Authentication, Other
 from util.serializers import RegistrationSerializer
 from util.errors import catch_error, BackendError
-import time
+from util.api_service import ApiService
+from util.telegram_service import TelegramService
 
 
+@catch_error
 def register_intro_callback(update:Update, context: CallbackContext) -> None:
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Email", callback_data=Constant.EMAIL.value),
-            InlineKeyboardButton(text="First Name", callback_data=Constant.FIRST_NAME.value),
+            InlineKeyboardButton(text="Email", callback_data=Authentication.EMAIL),
+            InlineKeyboardButton(text="First Name", callback_data=Authentication.FIRST_NAME),
         ],
         [
-            InlineKeyboardButton(text="Last Name", callback_data=Constant.LAST_NAME.value),
-            InlineKeyboardButton(text="Password", callback_data=Constant.PASSWORD.value),
+            InlineKeyboardButton(text="Last Name", callback_data=Authentication.LAST_NAME),
+            InlineKeyboardButton(text="Password", callback_data=Authentication.PASSWORD),
         ],
         [
             InlineKeyboardButton(text="Done", callback_data=State.REGISTER_SUBMIT.value),
@@ -26,47 +28,41 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    query = update if update.message else update.callback_query
+    if not context.user_data.get(State.START_OVER.value):
+        TelegramService.remove_prev_keyboard(update)
+        user_id = TelegramService.get_user_id(update)
 
-    if not context.user_data[State.START_OVER.value]:
-        query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-        userId = query.from_user["id"]
-        response = requests.get(f"http://127.0.0.1:8000/auth/user/{userId}")
-        
-        if response.status_code == 200:
-            context.user_data[State.START_OVER.value] = False
-            msg = "You are already registered, returning to main menu\.\.\.\."
-            query.message.reply_text(msg, parse_mode='MarkdownV2')
-            time.sleep(1)
-            start.start_callback(update, context)
-            return State.END.value
+        context.user_data[Authentication.REGISTRATION_DATA] = {
+            Authentication.USERNAME: user_id,
+            Authentication.PASSWORD: None,
+            Authentication.EMAIL: None,
+            Authentication.FIRST_NAME: None,
+            Authentication.LAST_NAME: None,
+            Authentication.PASSWORD: None,
+        }
 
-        context.user_data["registrationData"] = {Constant.USERNAME.value: userId}
         msg = "Lets get some of the information required"
-        query.message.edit_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        TelegramService.edit_reply_text(msg, update, reply_markup)
 
     else:
         msg = "Got it\! Please select some feature to update"
-        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=reply_markup)
+        TelegramService.reply_text(msg, update, reply_markup)
     
     return State.REGISTER_SELECTING_ACTION.value
 
 
-@catch_error
 def register_prompt_info_callback(update:Update, context: CallbackContext) -> None:
 
-    query = update.callback_query
-    query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-    feature = Constant(int(query.data)).name.replace("_", " ")
-    context.user_data["currentFeature"] = query.data
+    TelegramService.remove_prev_keyboard(update)
+    feature = TelegramService.get_callback_query_data(update)
+    context.user_data[Other.CURRENT_FEATURE] = feature
 
-    if context.user_data["registrationData"].get(int(query.data)):
+    if context.user_data[Authentication.REGISTRATION_DATA].get(feature):
         msg = f"You are updating *{feature}*, type your *{feature}* here"
     else:
         msg = f"Type your *{feature}*"
 
-    query.answer()
-    query.message.reply_text(msg, parse_mode='MarkdownV2')
+    TelegramService.reply_text(msg, update)
 
     return State.REGISTER_GET_INFO.value
 
@@ -74,9 +70,8 @@ def register_prompt_info_callback(update:Update, context: CallbackContext) -> No
 @catch_error
 def register_get_info_callback(update:Update, context: CallbackContext) -> None:
 
-    currentFeature = Constant(int(context.user_data["currentFeature"])).value
-    context.user_data["registrationData"][currentFeature] = update.message.text
-
+    current_feature = context.user_data.get(Other.CURRENT_FEATURE)
+    context.user_data[Authentication.REGISTRATION_DATA][current_feature] = update.message.text
     context.user_data[State.START_OVER.value] = True
     return register_intro_callback(update, context)
 
@@ -84,21 +79,24 @@ def register_get_info_callback(update:Update, context: CallbackContext) -> None:
 @catch_error
 def register_submit_info_callback(update: Update, context: CallbackContext) -> None:
     
-    query = update.callback_query
-    registrationData = context.user_data["registrationData"]
+    registration_data = context.user_data[Authentication.REGISTRATION_DATA]
     serializer = RegistrationSerializer()
-    payload = serializer.dump(registrationData, register_intro_callback)
-    response = requests.post("http://127.0.0.1:8000/auth/user", json=payload)
+    payload = serializer.dump(registration_data, register_intro_callback)
+    _ ,status_code = ApiService.signup(payload, context)
 
-    if response.status_code == 201:
-        query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-        msg = "Registered, please login to enjoy other features\. Returning to main menu\.\.\.\."
-        del context.user_data["registrationData"]
-        del context.user_data["currentFeature"]
-        query.message.reply_text(msg, parse_mode='MarkdownV2')
+    if status_code == HTTPStatus.CREATED:
+        TelegramService.remove_prev_keyboard(update)
+        msg = "Registered, please login to enjoy other features. Returning to main menu...."
+        TelegramService.reply_text(msg, update)
         start.start_callback(update, context)
         return State.END.value
 
-    elif response.status_code == 500:
+    elif status_code == HTTPStatus.BAD_REQUEST:
+        TelegramService.remove_prev_keyboard(update)
+        msg = "You might have invalid fields, please check your above entries and try again...."
+        TelegramService.reply_text(msg, update)
+        return register_intro_callback(update, context)
+
+    elif status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
         raise BackendError
         

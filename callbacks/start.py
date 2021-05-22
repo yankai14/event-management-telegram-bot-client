@@ -7,8 +7,14 @@ from util.telegram_service import TelegramService
 def start_callback(update:Update, context: CallbackContext) -> None:
 
     msg = "*Welcome to ALD Event Manager*\n\n"
-    msg += "Listed below are the following features you can take advantage of:\n"
-    msg += "Type /stop to exit the bot"
+    msg += "Listed below are the following features you can take advantage of\n"
+    msg += "-----------------------------------------\n"
+    msg += "Below are the default commands:\n"
+    msg += "/start - To start the bot 🏃\n"
+    msg += "/stop - To stop the bot✋\n"
+    msg += "/report - Report bugs or give feedback👮‍♀️\n"
+    msg += "-----------------------------------------\n"
+    msg += "Please contact the developer @yankai14 for any queries\n"
 
 
     if context.user_data.get("AUTH_TOKEN"):

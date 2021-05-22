@@ -51,6 +51,7 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
     return State.REGISTER_SELECTING_ACTION.value
 
 
+@catch_error
 def register_prompt_info_callback(update:Update, context: CallbackContext) -> None:
 
     TelegramService.remove_prev_keyboard(update)

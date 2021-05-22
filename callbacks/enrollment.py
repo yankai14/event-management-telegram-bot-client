@@ -1,15 +1,15 @@
 from callbacks import start
 from util.serializers import EnrollmentSerializer
-from util.errors import BackendError
+from util.errors import BackendError, catch_error
 from util.api_service import ApiService
 from util.telegram_service import TelegramService
-from util.constants import Authentication, EventInstance, State, Enrollment
+from util.constants import EventInstance, State, Enrollment
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from http import HTTPStatus
-import requests
 
 
+@catch_error
 def enrollment_prompt_info_callback(update:Update, context: CallbackContext) -> None:
 
     query = update.callback_query
@@ -21,6 +21,7 @@ def enrollment_prompt_info_callback(update:Update, context: CallbackContext) -> 
     return State.ENROLLMENT_GET_INFO.value
     
 
+@catch_error
 def enrollment_get_info_callback(update:Update, context: CallbackContext) -> None:
 
     event_instance_code = update.message.text
@@ -59,6 +60,7 @@ def enrollment_get_info_callback(update:Update, context: CallbackContext) -> Non
         TelegramService.reply_text(msg, update, reply_markup)
 
 
+@catch_error
 def enrollment_submit_info_callback(update:Update, context: CallbackContext) -> None:
 
     query = update.callback_query

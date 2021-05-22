@@ -1,14 +1,14 @@
 from http import HTTPStatus
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-import requests
 from dateutil import parser
-from util.enums import Constant
-from util.constants import State, Enrollment, Event, EventInstance, Authentication
+from util.errors import catch_error
+from util.constants import State, Enrollment, Event, EventInstance
 from util.api_service import ApiService
 from util.telegram_service import TelegramService
 
 
+@catch_error
 def event_callback(update:Update, context: CallbackContext) -> None:
     
     TelegramService.remove_prev_keyboard(update)
@@ -37,6 +37,7 @@ def event_callback(update:Update, context: CallbackContext) -> None:
     return State.EVENT_INSTANCE_LIST.value
 
 
+@catch_error
 def event_instance_callback(update:Update, context: CallbackContext) -> None:
 
     TelegramService.remove_prev_keyboard(update)

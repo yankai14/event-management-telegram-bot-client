@@ -29,7 +29,7 @@ def event_callback(update:Update, context: CallbackContext) -> None:
         keyboard.append([InlineKeyboardButton(text="Back", callback_data=str(State.END.value))])
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        TelegramService.reply_text(msg, update, reply_markup)
+        TelegramService.edit_reply_text(msg, update, reply_markup)
         context.user_data[Event.EVENTS] = events
 
     #TODO: Handle HTTPStatus 500 and 400
@@ -71,6 +71,6 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        TelegramService.reply_text(msg, update, reply_markup)
+        TelegramService.edit_reply_text(msg, update, reply_markup)
 
         return State.ENROLLMENT_SELECTING_ACTION.value

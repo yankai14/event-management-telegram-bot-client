@@ -10,6 +10,7 @@ from util.api_service import ApiService
 from util.telegram_service import TelegramService
 
 
+@catch_error
 def login_intro_callback(update: Update, context: CallbackContext) -> None:
 
     keyboard = [
@@ -53,7 +54,7 @@ def login_prompt_info_callback(update: Update, context: CallbackContext) -> None
     else:
         msg = f"Type your *{feature}*"
     
-    TelegramService.reply_text(msg, update)
+    TelegramService.edit_reply_text(msg, update)
 
     return State.LOGIN_GET_INFO.value
 
@@ -78,7 +79,7 @@ def login_submit_info_callback(update: Update, context: CallbackContext) -> None
     if status_code == HTTPStatus.OK:
         TelegramService.remove_prev_keyboard(update)
         msg = "Logged In, returning to main menu...."
-        TelegramService.reply_text(msg, update)
+        TelegramService.edit_reply_text(msg, update)
         start.start_callback(update, context)
         return State.END.value
 

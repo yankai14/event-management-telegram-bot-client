@@ -11,6 +11,10 @@ class State(Enum):
     NEW_LAUNCH_INTELLIGENCE = 3
     REGISTER = 4
     LOGIN = 5
+    ENROLLMENT_HISTORY = 100
+    # State definitions for Enrollment history feature
+    ENROLLMENT_HISTORY_SELECTING_ACTION = 101
+    ENROLLMENT_HISTORY_GET_INFO = 102
     # State definition for Register feature
     REGISTER_SELECTING_ACTION = 6
     REGISTER_GET_INFO = 7
@@ -56,6 +60,7 @@ class Event:
     CODE = "eventCode"
     NAME = "name"
     DESCRIPTION = "description"
+    LOCATION = "location"
 
 
 class EventInstance:
@@ -63,6 +68,22 @@ class EventInstance:
     LOCATION = "location"
     DATES = "dates"
     FEE = "fee"
+    IS_COMPLETED = "isCompleted"
+    EVENT= "event"
+    DATES = "dates"
+
+
+class EnrollmentRoles(Enum):
+    PARTICIPANT_ROLE = 1
+    FACILITATOR_ROLE =  2
+    ADMIN_ROLE = 3
+
+
+class EnrollmentStatus(Enum):
+    PENDING = 1
+    ENROLLED = 2
+    REJECTED = 3
+    WITHDRAWN = 4
 
 
 class Enrollment:
@@ -70,10 +91,17 @@ class Enrollment:
     ENROLLMENT_DATA = "enrollment_data"
     USERNAME = "username"
     ROLE = "role"
+    STATUS = "status"
     CHECKOUT = "checkout"
     
-    # Default Roles
-    # ADMIN_ROLE = 3
-    # FACILITATOR_ROLE =  2
-    PARTICIPANT_ROLE = 1
+    ROLE_ENUM = EnrollmentRoles
+    STATUS_ENUM = EnrollmentStatus
+
+
+class History:
+    ENROLLMENT_INFO = "enrollment_info"
+
+    # Data structure
+    EVENT_INSTANCE = "eventInstance"
+    IS_COMPLETED = "isCompleted"
 

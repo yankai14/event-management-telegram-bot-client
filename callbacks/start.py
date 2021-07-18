@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-from util.enums import State
+from util.constants import State
 from util.api_service import ApiService
 from util.telegram_service import TelegramService
 
@@ -21,6 +21,7 @@ def start_callback(update:Update, context: CallbackContext) -> None:
         keyboard = [
             [
                 InlineKeyboardButton(text="Event List", callback_data=str(State.EVENT_LIST.value)),
+                InlineKeyboardButton(text="Enrollment History", callback_data=str(State.ENROLLMENT_HISTORY.value)),
             ]
         ]
 

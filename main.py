@@ -4,15 +4,16 @@ from dotenv import load_dotenv
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from telegram.ext.conversationhandler import ConversationHandler
 from callbacks import (
-    start, 
-    event, 
-    enrollment, 
-    back_main_menu, 
-    register, 
-    login
+    start,
+    event,
+    enrollment,
+    back_main_menu,
+    register,
+    login,
+    enrollment_history
 )
 from util.enums import Constant
-from util.constants import Enrollment, State, Authentication
+from util.constants import Enrollment, History, State, Authentication
 from util.config import ENV
 import os
 import logging
@@ -30,16 +31,17 @@ def main():
     dispatcher = updater.dispatcher
 
     register_feature_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(register.register_intro_callback, pattern=f"^{str(State.REGISTER.value)}$")],
+        entry_points=[CallbackQueryHandler(
+            register.register_intro_callback, pattern=f"^{str(State.REGISTER.value)}$")],
         states={
             State.REGISTER_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
-                    register.register_prompt_info_callback, 
+                    register.register_prompt_info_callback,
                     pattern=f"^{Authentication.EMAIL}|{Authentication.FIRST_NAME}|{Authentication.LAST_NAME}|{Authentication.PASSWORD}$"
                 ),
             ],
             State.REGISTER_GET_INFO.value: [MessageHandler(
-                Filters.text & ~Filters.command, 
+                Filters.text & ~Filters.command,
                 register.register_get_info_callback
             )]
         },
@@ -61,7 +63,8 @@ def main():
     )
 
     login_conv_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(login.login_intro_callback, pattern=f"^{str(State.LOGIN.value)}")],
+        entry_points=[CallbackQueryHandler(
+            login.login_intro_callback, pattern=f"^{str(State.LOGIN.value)}")],
         states={
             State.LOGIN_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
@@ -71,7 +74,7 @@ def main():
             ],
             State.LOGIN_GET_INFO.value: [
                 MessageHandler(
-                    Filters.text & ~Filters.command, 
+                    Filters.text & ~Filters.command,
                     login.login_get_info_callback
                 )
             ]
@@ -107,7 +110,7 @@ def main():
         states={
             State.ENROLLMENT_GET_INFO.value: [
                 MessageHandler(
-                    Filters.text & ~Filters.command, 
+                    Filters.text & ~Filters.command,
                     enrollment.enrollment_get_info_callback
                 )
             ],
@@ -138,11 +141,11 @@ def main():
     event_feature_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(
-                event.event_callback, 
+                event.event_callback,
                 pattern=f"^{State.EVENT_LIST.value}$"
             )
         ],
-        states = {
+        states={
             State.EVENT_INSTANCE_LIST.value: [
                 CallbackQueryHandler(
                     event.event_instance_callback,
@@ -164,6 +167,34 @@ def main():
         }
     )
 
+    enrollment_history_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(
+                enrollment_history.history_callback,
+                pattern=f"^{State.ENROLLMENT_HISTORY.value}$"
+            )
+        ],
+        states={
+            State.ENROLLMENT_HISTORY_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    enrollment_history.history_prompt_info_callback,
+                    pattern=f"^{History.ENROLLMENT_INFO}"
+                )
+            ],
+            State.ENROLLMENT_GET_INFO.value: [
+                MessageHandler(
+                    Filters.text & ~Filters.command,
+                    enrollment_history.history_get_info_callback
+                )
+            ]
+        },
+        fallbacks=[
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{State.END.value}$"
+            ), 
+        ]
+    )
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start.start_callback)],
@@ -173,6 +204,7 @@ def main():
                 register_feature_conv,
                 login_conv_handler,
                 event_feature_conv,
+                enrollment_history_conv
             ],
             State.STOPPING.value: [CommandHandler("stop", stop.stop_callback)],
         },
@@ -183,6 +215,7 @@ def main():
 
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == "__main__":
     main()

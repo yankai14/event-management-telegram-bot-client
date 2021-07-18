@@ -8,6 +8,7 @@ import json
 
 baseURL = "http://127.0.0.1:8000/"
 
+
 @dataclass
 class ApiEndpoints:
     SIGNUP: str = "auth/user"
@@ -22,10 +23,11 @@ class ApiEndpoints:
     def __init__(self):
         for attr in dir(self):
             if not attr.startswith("__"):
-                setattr(self, attr, baseURL+ getattr(self, attr))
+                setattr(self, attr, baseURL + getattr(self, attr))
 
 
 APIEndpoints = ApiEndpoints()
+
 
 class ApiService:
 
@@ -47,7 +49,8 @@ class ApiService:
             "Content-Type": "application/json"
         }
         registration_data = json.dumps(registration_data)
-        response = requests.post(APIEndpoints.SIGNUP, headers=headers, data=registration_data)
+        response = requests.post(
+            APIEndpoints.SIGNUP, headers=headers, data=registration_data)
         user_details = response.json()
         status_code = response.status_code
 
@@ -63,7 +66,8 @@ class ApiService:
             "Content-Type": "application/json"
         }
         login_data = json.dumps(login_data)
-        response = requests.post(APIEndpoints.LOGIN, headers=headers, data=login_data)
+        response = requests.post(
+            APIEndpoints.LOGIN, headers=headers, data=login_data)
         token = response.json().get("token")
         status_code = response.status_code
 
@@ -93,7 +97,8 @@ class ApiService:
             "isCompleted": "False",
             "eventCode": event_code
         }
-        response = requests.get(APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
+        response = requests.get(
+            APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
         event_instances = response.json().get("results")
         status_code = response.status_code
         return event_instances, status_code
@@ -103,7 +108,8 @@ class ApiService:
         headers = {
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
-        response = requests.get(APIEndpoints.GET_EVENT_INSTANCE_LIST+f'/{event_instance_code}', headers=headers)
+        response = requests.get(
+            APIEndpoints.GET_EVENT_INSTANCE_LIST+f'/{event_instance_code}', headers=headers)
         event_instance = response.json()
         status_code = response.status_code
         return event_instance, status_code
@@ -117,21 +123,36 @@ class ApiService:
             "user": username,
             "eventInstance": event_instance_code
         }
-        response = requests.get(APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
+        response = requests.get(
+            APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
         if response.json().get("count") > 0:
-            enrollment = response.json().get("results")[0] # Will always get 1 enrollment, handled by backend
+            # Will always get 1 enrollment, handled by backend
+            enrollment = response.json().get("results")[0]
         else:
             enrollment = None
         status_code = response.status_code
         return enrollment, status_code
 
     @staticmethod
+    def get_user_enrollments(username, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        params = {"user": username}
+        response = requests.get(
+            APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
+        enrollments = response.json().get("results")
+        status_code = response.status_code
+        return enrollments, status_code
+
+    @staticmethod
     def check_enrollment_exist(username: int, event_instance_code: str, context: CallbackContext):
-        enrollment, _ = ApiService.get_specific_enrollment(username, event_instance_code, context)
+        enrollment, _ = ApiService.get_specific_enrollment(
+            username, event_instance_code, context)
 
         if enrollment == None:
             return False
-            
+
         return len(enrollment) > 0
 
     @staticmethod
@@ -139,14 +160,13 @@ class ApiService:
         headers = {
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
-        response = requests.post(APIEndpoints.CREATE_ENROLLMENT, data=enrollment_data, headers=headers)
+        response = requests.post(
+            APIEndpoints.CREATE_ENROLLMENT, data=enrollment_data, headers=headers)
         enrollment = response.json()
+        print(enrollment)
         status_code = response.status_code
 
         if status_code == HTTPStatus.CREATED:
             del context.user_data[Enrollment.ENROLLMENT_DATA]
 
         return enrollment, status_code
-
-
-        

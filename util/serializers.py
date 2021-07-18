@@ -34,6 +34,7 @@ class EnrollmentSerializer(Schema):
     username = fields.Int(required=True)
     eventInstanceCode = fields.Str(required=True)
     role = fields.Int(required=True)
+    status = fields.Int(required=True)
 
     class Meta:
         unknown = INCLUDE
@@ -46,7 +47,8 @@ class EnrollmentSerializer(Schema):
         dataRequired = {
             "username": obj.get("username"),
             "eventInstanceCode": obj.get("eventInstanceCode"),
-            "role": obj.get("role")
+            "role": obj.get("role"),
+            "status": obj.get("status")
         }
 
         return super().dump(dataRequired)

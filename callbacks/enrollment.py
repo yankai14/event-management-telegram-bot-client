@@ -30,7 +30,8 @@ def enrollment_get_info_callback(update:Update, context: CallbackContext) -> Non
 
         context.user_data[Enrollment.ENROLLMENT_DATA] = {
             Enrollment.USERNAME: TelegramService.get_user_id(update),
-            Enrollment.ROLE: Enrollment.PARTICIPANT_ROLE,
+            Enrollment.ROLE: Enrollment.ROLE_ENUM.PARTICIPANT_ROLE,
+            Enrollment.STATUS: Enrollment.STATUS_ENUM.PENDING
         }
         context.user_data[Enrollment.ENROLLMENT_DATA].update(event_instance)
     

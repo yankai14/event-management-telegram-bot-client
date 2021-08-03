@@ -26,7 +26,7 @@ def event_callback(update:Update, context: CallbackContext) -> None:
                 callback_data=f"{State.EVENT_INSTANCE_LIST.value}={event[Event.CODE]}"
             )])
 
-        keyboard.append([InlineKeyboardButton(text="Back", callback_data=str(State.END.value))])
+        keyboard.append([InlineKeyboardButton(text="Back", callback_data=str(State.BACK.value))])
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         TelegramService.edit_reply_text(msg, update, reply_markup)
@@ -67,7 +67,7 @@ def event_instance_callback(update:Update, context: CallbackContext) -> None:
         keyboard = [
             [
                 InlineKeyboardButton(text="Enroll", callback_data=Enrollment.ENROLL),
-                InlineKeyboardButton(text="Back", callback_data=str(State.END.value))
+                InlineKeyboardButton(text="Back", callback_data=str(State.BACK.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)

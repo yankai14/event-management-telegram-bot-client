@@ -1,4 +1,3 @@
-from callbacks import start
 from http import HTTPStatus
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
@@ -22,6 +21,7 @@ def history_callback(update: Update, context: CallbackContext) -> None:
         for id, enrollment in enumerate(enrollments):
             msg += f"*{id+1}: {enrollment[History.EVENT_INSTANCE][EventInstance.CODE]}*\n"
             msg += f"Location: {enrollment[History.EVENT_INSTANCE][EventInstance.LOCATION]}\n"
+            msg += f"Application role: {Enrollment.ROLE_ENUM(enrollment[Enrollment.ROLE]).name}\n"
             msg += f"Completed: {enrollment[History.EVENT_INSTANCE][EventInstance.IS_COMPLETED]}\n\n"
 
         keyboard = [
@@ -29,7 +29,7 @@ def history_callback(update: Update, context: CallbackContext) -> None:
                 InlineKeyboardButton(
                     text="More info", callback_data=History.ENROLLMENT_INFO),
                 InlineKeyboardButton(
-                    text="Back", callback_data=str(State.END.value))
+                    text="Back", callback_data=str(State.BACK.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -41,7 +41,7 @@ def history_callback(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    text="Back", callback_data=str(State.END.value))
+                    text="Back", callback_data=str(State.BACK.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -71,7 +71,7 @@ def history_get_info_callback(update: Update, context: CallbackContext):
                 InlineKeyboardButton(
                     text="Get Another Enrollment Info", callback_data=History.ENROLLMENT_INFO),
                 InlineKeyboardButton(
-                    text="Back", callback_data=str(State.END.value))
+                    text="Back", callback_data=str(State.BACK.value))
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import requests
 from util.config import ENV
-from util.constants import Authentication, Other, Enrollment
+from util.constants import Authentication, EnrollmentRoles, EventInstance, Folder, FolderPermission, Other, Enrollment
 from telegram.ext import CallbackContext
 from http import HTTPStatus
 import json
@@ -19,6 +19,8 @@ class ApiEndpoints:
     GET_EVENT_INSTANCE: str = "event-instance"
     GET_ENROLLMENT_LIST: str = "enrollment"
     CREATE_ENROLLMENT: str = "enrollment"
+    GET_FOLDER: str = "event-instance-folder"
+    CREATE_FOLDER_PERMISSION: str = "event-instance-folder-permissions"
 
     def __init__(self):
         for attr in dir(self):
@@ -94,7 +96,8 @@ class ApiService:
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
         params = {
-            "isCompleted": "False",
+            "isCompleted": "false",
+            "isOpenForSignUps": "true",
             "eventCode": event_code
         }
         response = requests.get(
@@ -163,10 +166,60 @@ class ApiService:
         response = requests.post(
             APIEndpoints.CREATE_ENROLLMENT, data=enrollment_data, headers=headers)
         enrollment = response.json()
-        print(enrollment)
         status_code = response.status_code
 
         if status_code == HTTPStatus.CREATED:
             del context.user_data[Enrollment.ENROLLMENT_DATA]
 
         return enrollment, status_code
+
+    @staticmethod
+    def get_folder(event_instance_code: str, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        params = {
+            "eventInstance": event_instance_code
+        }
+        response = requests.get(APIEndpoints.GET_FOLDER,
+                                headers=headers, params=params)
+        if response.json().get("count") > 0:
+            # Will always get 1 folder, handled by backend
+            folder = response.json().get("results")[0]
+        else:
+            folder = None
+        status_code = response.status_code
+        return folder, status_code
+
+    @staticmethod
+    def create_folder_permission(folder_id: str, folder_role: str, username: str, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        permission_data = {
+            "folderId": folder_id,
+            "folderRole": folder_role,
+            "username": username
+        }
+        response = requests.post(
+            APIEndpoints.CREATE_FOLDER_PERMISSION, data=permission_data, headers=headers)
+
+        permission = response.json()
+        status_code = response.status_code
+        return permission, status_code
+
+    @staticmethod
+    def assign_folder_permission(enrollment_data: dict, username: str, context: CallbackContext):
+        role = Enrollment.ROLE_ENUM(enrollment_data.get(Enrollment.ROLE))
+        event_instance_code = enrollment_data.get(EventInstance.CODE)
+        folder, _ = ApiService.get_folder(event_instance_code, context)
+        folder_id = folder.get(Folder.FOLDER_ID)
+        if role == Enrollment.ROLE_ENUM.FACILITATOR:
+            ApiService.create_folder_permission(
+                folder_id, FolderPermission.FOLDER_ROLE_ENUM.WRITER.value, username, context)
+
+        if role == Enrollment.ROLE_ENUM.PARTICIPANT:
+            ApiService.create_folder_permission(
+                folder_id, FolderPermission.FOLDER_ROLE_ENUM.READER.value, username, context)
+
+        return folder_id

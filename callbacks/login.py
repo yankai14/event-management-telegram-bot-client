@@ -19,7 +19,7 @@ def login_intro_callback(update: Update, context: CallbackContext) -> None:
             ],
             [
                 InlineKeyboardButton(text="Done", callback_data=State.LOGIN_SUBMIT.value),
-                InlineKeyboardButton(text="Back", callback_data=State.END.value)
+                InlineKeyboardButton(text="Back", callback_data=State.BACK.value)
             ]
         ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -81,7 +81,7 @@ def login_submit_info_callback(update: Update, context: CallbackContext) -> None
         msg = "Logged In, returning to main menu...."
         TelegramService.edit_reply_text(msg, update)
         start.start_callback(update, context)
-        return State.END.value
+        return State.BACK.value
 
     elif status_code == 400:
         TelegramService.remove_prev_keyboard(update)

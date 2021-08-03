@@ -49,7 +49,7 @@ def main():
             CommandHandler("stop", stop.stop_callback),
             CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{str(State.END.value)}$"
+                pattern=f"^{str(State.BACK.value)}$"
             ),
             CallbackQueryHandler(
                 register.register_submit_info_callback,
@@ -58,7 +58,8 @@ def main():
         ],
         map_to_parent={
             # Return to parent conversation
-            State.END.value: State.FEATURE_SELECTION.value
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
         }
     )
 
@@ -83,7 +84,7 @@ def main():
             CommandHandler("stop", stop.stop_callback),
             CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{str(State.END.value)}$"
+                pattern=f"^{str(State.BACK.value)}$"
             ),
             CallbackQueryHandler(
                 login.login_intro_callback,
@@ -96,7 +97,8 @@ def main():
         ],
         map_to_parent={
             # Return to parent conversation
-            State.END.value: State.FEATURE_SELECTION.value
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
         }
     )
 
@@ -114,6 +116,12 @@ def main():
                     enrollment.enrollment_get_info_callback
                 )
             ],
+            State.ENROLLMENT_SELECT_ROLE.value: [
+                CallbackQueryHandler(
+                    enrollment.enrollment_set_role_callback,
+                    pattern=f"^{Enrollment.ROLE_ENUM.PARTICIPANT.value}|{Enrollment.ROLE_ENUM.FACILITATOR.value}$"
+                )
+            ],
             State.ENROLLMENT_SUBMIT.value: [
                 CallbackQueryHandler(
                     enrollment.enrollment_submit_info_callback,
@@ -128,12 +136,13 @@ def main():
             ),
             CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{State.END.value}$"
+                pattern=f"^{State.BACK.value}$"
             ),
             CommandHandler("stop", stop.stop_callback)
         ],
         map_to_parent={
             # Return to parent conversation
+            State.BACK.value: State.BACK.value,
             State.END.value: State.END.value
         }
     )
@@ -157,13 +166,14 @@ def main():
         fallbacks=[
             CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{State.END.value}$"
+                pattern=f"^{State.BACK.value}$"
             ),
             CommandHandler("stop", stop.stop_callback)
         ],
         map_to_parent={
             # Return to parent conversation
-            State.END.value: State.FEATURE_SELECTION.value
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
         }
     )
 
@@ -191,15 +201,21 @@ def main():
         fallbacks=[
             CallbackQueryHandler(
                 back_main_menu.back_main_menu_callback,
-                pattern=f"^{State.END.value}$"
+                pattern=f"^{State.BACK.value}$"
             ), 
-        ]
+            CommandHandler("stop", stop.stop_callback)
+        ],
+        map_to_parent={
+            # Return to parent conversation
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
+        }
     )
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start.start_callback)],
         states={
-            State.SHOWING.value: [CallbackQueryHandler(start.start_callback, pattern=f"^{str(State.END.value)}$")],
+            State.SHOWING.value: [CallbackQueryHandler(start.start_callback, pattern=f"^{str(State.BACK.value)}$")],
             State.FEATURE_SELECTION.value: [
                 register_feature_conv,
                 login_conv_handler,

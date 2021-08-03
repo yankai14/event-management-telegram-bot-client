@@ -7,33 +7,35 @@ class State(Enum):
     # State definition for top level conversation
     FEATURE_SELECTION = 1
     # State definitions for 2nd level conversation (features)
-    EVENT_LIST = 2
-    NEW_LAUNCH_INTELLIGENCE = 3
-    REGISTER = 4
-    LOGIN = 5
-    ENROLLMENT_HISTORY = 100
+    EVENT_LIST = 100
+    NEW_LAUNCH_INTELLIGENCE = 101
+    REGISTER = 102
+    LOGIN = 103
+    ENROLLMENT_HISTORY = 104
     # State definitions for Enrollment history feature
-    ENROLLMENT_HISTORY_SELECTING_ACTION = 101
-    ENROLLMENT_HISTORY_GET_INFO = 102
+    ENROLLMENT_HISTORY_SELECTING_ACTION = 200
+    ENROLLMENT_HISTORY_GET_INFO = 201
     # State definition for Register feature
-    REGISTER_SELECTING_ACTION = 6
-    REGISTER_GET_INFO = 7
-    REGISTER_SUBMIT = 8
+    REGISTER_SELECTING_ACTION = 300
+    REGISTER_GET_INFO = 301
+    REGISTER_SUBMIT = 302
     # State definition for login feature
-    LOGIN_SELECTING_ACTION = 9
-    LOGIN_GET_INFO = 10
-    LOGIN_SUBMIT = 11
+    LOGIN_SELECTING_ACTION = 400
+    LOGIN_GET_INFO = 401
+    LOGIN_SUBMIT = 402
     # State definitions for Event feature
-    EVENT_INSTANCE_LIST = 12
+    EVENT_INSTANCE_LIST = 500
     # State definitions for Enrollment feature
-    ENROLLMENT_SELECTING_ACTION = 13
-    ENROLLMENT_GET_INFO = 14
-    ENROLLMENT_SUBMIT = 15
+    ENROLLMENT_SELECTING_ACTION = 601
+    ENROLLMENT_GET_INFO = 602
+    ENROLLMENT_SELECT_ROLE = 603
+    ENROLLMENT_SUBMIT = 604
 
     # Meta states
-    STOPPING = 16
-    SHOWING = 17
-    START_OVER = 18 
+    STOPPING = 1000
+    SHOWING = 1001
+    START_OVER = 1002 
+    BACK = 1003
     # Shortcut to end conversation
     END = ConversationHandler.END
 
@@ -69,14 +71,17 @@ class EventInstance:
     DATES = "dates"
     FEE = "fee"
     IS_COMPLETED = "isCompleted"
+    IS_OPEN_FOR_SIGNUPS = "isOpenForSignUps"
     EVENT= "event"
     DATES = "dates"
 
 
 class EnrollmentRoles(Enum):
-    PARTICIPANT_ROLE = 1
-    FACILITATOR_ROLE =  2
-    ADMIN_ROLE = 3
+    PARTICIPANT = 1
+    FACILITATOR = 2
+    EVENT_ADMIN = 3
+    COORDINATOR = 4
+    LEAD = 5
 
 
 class EnrollmentStatus(Enum):
@@ -84,6 +89,7 @@ class EnrollmentStatus(Enum):
     ENROLLED = 2
     REJECTED = 3
     WITHDRAWN = 4
+    AWAITING_PAYMENT = 5
 
 
 class Enrollment:
@@ -105,3 +111,25 @@ class History:
     EVENT_INSTANCE = "eventInstance"
     IS_COMPLETED = "isCompleted"
 
+
+class Folder:
+    # Data structure
+    EVENT_INSTANCE = "eventInstance"
+    FOLDER_ID = "folderId"
+    FOLDER_NAME = "folderName"
+
+
+class FolderPermissionRoles(Enum):
+    READER = "reader"
+    WRITER = "writer"
+    ORGANIZER = "organizer"
+
+
+class FolderPermission:
+    # Data structure
+    FOLDER = "folder"
+    USER = "user"
+    PERMISSION_ID = "permissionId"
+    FOLDER_ROLE = "folderRole"
+
+    FOLDER_ROLE_ENUM = FolderPermissionRoles

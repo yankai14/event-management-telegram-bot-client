@@ -23,7 +23,7 @@ def register_intro_callback(update:Update, context: CallbackContext) -> None:
         ],
         [
             InlineKeyboardButton(text="Done", callback_data=State.REGISTER_SUBMIT.value),
-            InlineKeyboardButton(text="Back", callback_data=State.END.value)
+            InlineKeyboardButton(text="Back", callback_data=State.BACK.value)
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -90,7 +90,7 @@ def register_submit_info_callback(update: Update, context: CallbackContext) -> N
         msg = "Registered, please login to enjoy other features. Returning to main menu...."
         TelegramService.reply_text(msg, update)
         start.start_callback(update, context)
-        return State.END.value
+        return State.BACK.value
 
     elif status_code == HTTPStatus.BAD_REQUEST:
         TelegramService.remove_prev_keyboard(update)

@@ -6,7 +6,7 @@ from telegram.ext import CallbackContext
 from http import HTTPStatus
 import json
 
-baseURL = "http://127.0.0.1:8000/"
+baseURL = ENV.API_BASE_URL
 
 
 @dataclass

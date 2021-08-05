@@ -11,6 +11,7 @@ class ENVIRONMENT_VARIABLES:
     MAIL_PORT:str = os.getenv("MAIL_PORT")
     MAIL_ADDRESS:str = os.getenv("MAIL_ADDRESS")
     MAIL_PASSWORD:str = os.getenv("MAIL_PASSWORD")
+    API_BASE_URL: str = os.getenv("API_BASE_URL")
 
 
 ENV = ENVIRONMENT_VARIABLES()

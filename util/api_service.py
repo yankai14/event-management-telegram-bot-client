@@ -90,18 +90,16 @@ class ApiService:
         status_code = response.status_code
         return events, status_code
 
+
+# Removed params. Directly input params into requests.get url
     @staticmethod
     def get_event_instance_list(event_code: str, context: CallbackContext):
         headers = {
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
-        params = {
-            "isCompleted": "false",
-            "isOpenForSignUps": "true",
-            "eventCode": event_code
-        }
+
         response = requests.get(
-            APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
+            f"{APIEndpoints.GET_EVENT_INSTANCE_LIST}?eventCode={event_code}", headers=headers)
         event_instances = response.json().get("results")
         status_code = response.status_code
         return event_instances, status_code
@@ -223,3 +221,4 @@ class ApiService:
                 folder_id, FolderPermission.FOLDER_ROLE_ENUM.READER.value, username, context)
 
         return folder_id
+

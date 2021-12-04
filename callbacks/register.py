@@ -1,5 +1,7 @@
 from http import HTTPStatus
+import telegram
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, user
+from telegram.callbackquery import CallbackQuery
 from telegram.ext import CallbackContext
 from callbacks import start
 from util.constants import State, Authentication, Other

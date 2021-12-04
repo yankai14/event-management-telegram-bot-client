@@ -21,6 +21,7 @@ class ApiEndpoints:
     CREATE_ENROLLMENT: str = "enrollment"
     GET_FOLDER: str = "event-instance-folder"
     CREATE_FOLDER_PERMISSION: str = "event-instance-folder-permissions"
+    STRIPE_CHECKOUT: str = "event-payment/"
 
     def __init__(self):
         for attr in dir(self):
@@ -100,7 +101,7 @@ class ApiService:
 
         response = requests.get(
             f"{APIEndpoints.GET_EVENT_INSTANCE_LIST}?eventCode={event_code}", headers=headers)
-        event_instances = response.json().get("results")
+        event_instances = response.json().get("results") 
         status_code = response.status_code
         return event_instances, status_code
 
@@ -121,15 +122,17 @@ class ApiService:
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
         params = {
-            "user": username,
-            "eventInstance": event_instance_code
+            "username": username,
+            "eventInstanceCode": event_instance_code
         }
+        #Eg of url: https://httpbin.org/get?key2=value2&key1=value1
         response = requests.get(
             APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
         if response.json().get("count") > 0:
             # Will always get 1 enrollment, handled by backend
             enrollment = response.json().get("results")[0]
         else:
+            print("user have not enrolled")
             enrollment = None
         status_code = response.status_code
         return enrollment, status_code
@@ -139,7 +142,7 @@ class ApiService:
         headers = {
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
-        params = {"user": username}
+        params = {"username": username}
         response = requests.get(
             APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
         enrollments = response.json().get("results")
@@ -165,7 +168,6 @@ class ApiService:
             APIEndpoints.CREATE_ENROLLMENT, data=enrollment_data, headers=headers)
         enrollment = response.json()
         status_code = response.status_code
-
         if status_code == HTTPStatus.CREATED:
             del context.user_data[Enrollment.ENROLLMENT_DATA]
 
@@ -222,3 +224,15 @@ class ApiService:
 
         return folder_id
 
+    @staticmethod
+    def enrollment_payment(enrollment_data:dict, context:CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        response = requests.post(
+            APIEndpoints.STRIPE_CHECKOUT, json=enrollment_data, headers=headers
+        )
+        status_code = response.status_code
+        response = response.json()
+        return response, status_code
+        

@@ -1,5 +1,7 @@
+from telegram.message import Message
 from callbacks import stop
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import CallbackQuery
 from dotenv import load_dotenv
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
 from telegram.ext.conversationhandler import ConversationHandler
@@ -10,10 +12,11 @@ from callbacks import (
     back_main_menu,
     register,
     login,
-    enrollment_history
+    enrollment_history,
+    enrollment_payment
 )
 from util.enums import Constant
-from util.constants import Enrollment, History, State, Authentication
+from util.constants import Enrollment, History, State, Authentication, Payment
 from util.config import ENV
 import os
 import logging
@@ -63,6 +66,8 @@ def main():
         }
     )
 
+
+
     login_conv_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(
             login.login_intro_callback, pattern=f"^{str(State.LOGIN.value)}")],
@@ -101,6 +106,10 @@ def main():
             State.END.value: State.END.value
         }
     )
+
+
+
+
 
     enrollment_conv = ConversationHandler(
         entry_points=[
@@ -147,6 +156,11 @@ def main():
         }
     )
 
+
+
+
+
+
     event_feature_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(
@@ -177,6 +191,47 @@ def main():
         }
     )
 
+
+    enrollment_payment_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(
+                enrollment_payment.enrollment_payment_callback,
+                pattern=f"^{State.ENROLLMENT_PAYMENT.value}$"
+            )
+        ],
+        states={
+            State.ENROLLMENT_HISTORY_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    enrollment_payment.prompt_get_enrolled_info_callback,
+                    pattern=f"^{Payment.ENROLLMENT_PAYMENT_INFO}$"
+                )
+            ],
+            State.ENROLLMENT_PAYMENT_GET_INFO.value: [
+                MessageHandler(
+                    Filters.text & ~Filters.command,
+                    enrollment_payment.get_enrolled_info_callback
+                )
+            ]
+        },
+        fallbacks=[
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{State.BACK.value}$"
+            ),
+            CommandHandler("stop", stop.stop_callback)
+        ],
+        map_to_parent={
+            # Return to parent conversation
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
+        }        
+    )
+
+
+# callback_data: ENROLLMENT_HISTORY in start.py. When CallbackQueryHandler pattern matches
+# the callbback-data ENROLLMENT_HISTORY, enrollment_history.history_callback method 
+# is called
+
     enrollment_history_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(
@@ -193,6 +248,7 @@ def main():
             ],
             State.ENROLLMENT_GET_INFO.value: [
                 MessageHandler(
+                    # Filter.text, Filters.command  means allow any text msg and commands
                     Filters.text & ~Filters.command,
                     enrollment_history.history_get_info_callback
                 )
@@ -212,6 +268,15 @@ def main():
         }
     )
 
+
+
+
+
+
+
+
+
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start.start_callback)],
         states={
@@ -220,7 +285,8 @@ def main():
                 register_feature_conv,
                 login_conv_handler,
                 event_feature_conv,
-                enrollment_history_conv
+                enrollment_history_conv,
+                enrollment_payment_conv
             ],
             State.STOPPING.value: [CommandHandler("stop", stop.stop_callback)],
         },

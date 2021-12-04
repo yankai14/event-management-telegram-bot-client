@@ -11,11 +11,9 @@ from http import HTTPStatus
 
 @catch_error
 def enrollment_prompt_info_callback(update: Update, context: CallbackContext) -> None:
-
     query = update.callback_query
     query.message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([]))
-
-    msg = "Enter the exact *Event Schedule Code* that you want to enroll for here"
+    msg = "To confirm and enroll, please enter the exact *Event Code* that you want to enroll for here"
     query.message.reply_text(msg, parse_mode="MarkdownV2")
 
     return State.ENROLLMENT_GET_INFO.value
@@ -26,12 +24,12 @@ def enrollment_get_info_callback(update: Update, context: CallbackContext) -> No
     event_instance_code = update.message.text
     event_instance, status_code = ApiService.get_specific_event_instance(
         event_instance_code, context)
-    if status_code == HTTPStatus.OK and event_instance.get(EventInstance.IS_COMPLETED):
 
+    if status_code == HTTPStatus.OK and event_instance.get(EventInstance.IS_COMPLETED) == False:
         context.user_data[Enrollment.ENROLLMENT_DATA] = {
             Enrollment.USERNAME: TelegramService.get_user_id(update),
             Enrollment.ROLE: Enrollment.ROLE_ENUM.PARTICIPANT.value,
-            Enrollment.STATUS: Enrollment.STATUS_ENUM.PENDING.value
+            Enrollment.STATUS: Enrollment.STATUS_ENUM.AWAITING_PAYMENT.value
         }
         context.user_data[Enrollment.ENROLLMENT_DATA].update(event_instance)
 
@@ -106,19 +104,18 @@ def enrollment_submit_info_callback(update: Update, context: CallbackContext) ->
 
     if not enrollment_exist:
 
-        if float(enrollment_data["fee"]) == 0:
+        enrollment, status_code = ApiService.create_enrollment(payload, context)
 
-            _, status_code = ApiService.create_enrollment(payload, context)
+        if status_code == HTTPStatus.CREATED:
+            print(context.user_data)
+            msg = "Enrolled to course, please make payment shortly. Returning to main menu...."
+            context.user_data[State.START_OVER.value] = True
+            TelegramService.reply_text(msg, update)
+            start.start_callback(update, context)
+            return State.BACK.value
 
-            if status_code == HTTPStatus.CREATED:
-                msg = "Enrolled to course, returning to main menu...."
-                context.user_data[State.START_OVER.value] = True
-                TelegramService.reply_text(msg, update)
-                start.start_callback(update, context)
-                return State.BACK.value
-
-            else:
-                BackendError(details=status_code)
+        else:
+            BackendError(details=status_code)
 
     else:
         msg = "You are already enrolled, returning to main menu...."

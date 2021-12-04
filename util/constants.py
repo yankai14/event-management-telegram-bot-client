@@ -12,6 +12,8 @@ class State(Enum):
     REGISTER = 102
     LOGIN = 103
     ENROLLMENT_HISTORY = 104
+    ENROLLMENT_PAYMENT = 105
+    
     # State definitions for Enrollment history feature
     ENROLLMENT_HISTORY_SELECTING_ACTION = 200
     ENROLLMENT_HISTORY_GET_INFO = 201
@@ -30,6 +32,10 @@ class State(Enum):
     ENROLLMENT_GET_INFO = 602
     ENROLLMENT_SELECT_ROLE = 603
     ENROLLMENT_SUBMIT = 604
+    # State definitions for Enrollment Payment feature
+    ENROLLMENT_PAYMENT_GET_INFO = 701
+    
+
 
     # Meta states
     STOPPING = 1000
@@ -59,6 +65,7 @@ class Authentication:
 
 class Event:
     EVENTS = "events"
+    EVENT = "event"
     CODE = "eventCode"
     NAME = "name"
     DESCRIPTION = "description"
@@ -97,7 +104,7 @@ class Enrollment:
     ENROLLMENT_DATA = "enrollment_data"
     USERNAME = "username"
     ROLE = "role"
-    STATUS = "status"
+    STATUS = "enrollmentStatus"
     CHECKOUT = "checkout"
     
     ROLE_ENUM = EnrollmentRoles
@@ -109,8 +116,12 @@ class History:
 
     # Data structure
     EVENT_INSTANCE = "eventInstance"
+    EVENT_INSTANCE_CODE = "eventInstanceCode"
     IS_COMPLETED = "isCompleted"
 
+
+class Payment:
+    ENROLLMENT_PAYMENT_INFO = "enrollment_payment_info"
 
 class Folder:
     # Data structure

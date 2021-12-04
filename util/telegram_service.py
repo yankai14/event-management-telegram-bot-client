@@ -17,8 +17,24 @@ class TelegramService:
         return msg
 
     @staticmethod
+    def replace_invalid_char_stripe_url(msg: str):
+        msg = msg.replace('_', '\_')
+        msg = msg.replace('.', '\.')
+        msg = msg.replace('-', '\-')
+        msg = msg.replace('#', '\#')
+        msg = msg.replace('!', '\!')
+        msg = msg.replace('=', '\=')
+        return msg
+
+    @staticmethod
     def reply_text(msg: str, update: Update, keyboard: InlineKeyboardMarkup=None):
         msg = TelegramService.replace_invalid_char(msg)
+        query = TelegramService.get_query(update)
+        query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=keyboard)
+
+    @staticmethod
+    def reply_text_with_url(msg: str, update: Update, keyboard: InlineKeyboardMarkup=None):
+        msg = TelegramService.replace_invalid_char_stripe_url(msg)
         query = TelegramService.get_query(update)
         query.message.reply_text(msg, parse_mode='MarkdownV2', reply_markup=keyboard)
 

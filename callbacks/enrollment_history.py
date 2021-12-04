@@ -4,7 +4,7 @@ from telegram.ext import CallbackContext
 from util.errors import catch_error
 from util.api_service import ApiService
 from util.telegram_service import TelegramService
-from util.constants import EventInstance, State, History
+from util.constants import EventInstance, State, History, Event
 from util.constants import Enrollment
 from datetime import datetime
 
@@ -15,11 +15,14 @@ def history_callback(update: Update, context: CallbackContext) -> None:
     enrollments, status_code = ApiService.get_user_enrollments(
         TelegramService.get_user_id(update), context)
 
+
+
     if status_code == HTTPStatus.OK and len(enrollments) > 0:
         msg = "*These are the events instances you are enrolled in*\n\n"
-
         for id, enrollment in enumerate(enrollments):
-            msg += f"*{id+1}: {enrollment[History.EVENT_INSTANCE][EventInstance.CODE]}*\n"
+            msg += f"Id: {id+1}\n"
+            msg += f"Event: {enrollment[History.EVENT_INSTANCE][Event.EVENT]}\n"
+            msg += f"Event Instance: {enrollment[History.EVENT_INSTANCE][History.EVENT_INSTANCE_CODE]}\n"
             msg += f"Location: {enrollment[History.EVENT_INSTANCE][EventInstance.LOCATION]}\n"
             msg += f"Application role: {Enrollment.ROLE_ENUM(enrollment[Enrollment.ROLE]).name}\n"
             msg += f"Completed: {enrollment[History.EVENT_INSTANCE][EventInstance.IS_COMPLETED]}\n\n"
@@ -87,8 +90,8 @@ def history_get_info_callback(update: Update, context: CallbackContext):
                 date, "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%c")
             msg += f"- {dt}\n"
         msg += f"-----------------------------------------------\n"
-        msg += f"Application status 📖: {Enrollment.STATUS_ENUM(enrollment[Enrollment.STATUS]).name}\n"
         msg += f"Application role 😊: {Enrollment.ROLE_ENUM(enrollment[Enrollment.ROLE]).name}\n"
+        msg += f"Enrollment Status: {Enrollment.STATUS_ENUM(enrollment[Enrollment.STATUS]).name}\n"
         msg += f"Is completed ✅: {enrollment[History.EVENT_INSTANCE][EventInstance.IS_COMPLETED]}\n"
         TelegramService.reply_text(msg, update, reply_markup)
         return State.ENROLLMENT_HISTORY_SELECTING_ACTION.value

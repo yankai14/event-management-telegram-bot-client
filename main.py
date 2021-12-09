@@ -10,10 +10,11 @@ from callbacks import (
     back_main_menu,
     register,
     login,
-    enrollment_history
+    enrollment_history,
+    enrollment_payment
 )
 from util.enums import Constant
-from util.constants import Enrollment, History, State, Authentication
+from util.constants import Enrollment, History, State, Authentication, Payment
 from util.config import ENV
 import os
 import logging
@@ -176,6 +177,43 @@ def main():
             State.END.value: State.END.value
         }
     )
+    
+
+    enrollment_payment_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(
+                enrollment_payment.enrollment_payment_callback,
+                pattern=f"^{State.ENROLLMENT_PAYMENT.value}$"
+            )
+        ],
+        states={
+            State.ENROLLMENT_HISTORY_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    enrollment_payment.prompt_get_enrolled_info_callback,
+                    pattern=f"^{Payment.ENROLLMENT_PAYMENT_INFO}$"
+                )
+            ],
+            State.ENROLLMENT_PAYMENT_GET_INFO.value: [
+                MessageHandler(
+                    Filters.text & ~Filters.command,
+                    enrollment_payment.get_enrolled_info_callback
+                )
+            ]
+        },
+        fallbacks=[
+            CallbackQueryHandler(
+                back_main_menu.back_main_menu_callback,
+                pattern=f"^{State.BACK.value}$"
+            ),
+            CommandHandler("stop", stop.stop_callback)
+        ],
+        map_to_parent={
+            # Return to parent conversation
+            State.BACK.value: State.FEATURE_SELECTION.value,
+            State.END.value: State.END.value
+        }        
+    )
+
 
     enrollment_history_conv = ConversationHandler(
         entry_points=[
@@ -220,7 +258,8 @@ def main():
                 register_feature_conv,
                 login_conv_handler,
                 event_feature_conv,
-                enrollment_history_conv
+                enrollment_history_conv,
+                enrollment_payment_conv
             ],
             State.STOPPING.value: [CommandHandler("stop", stop.stop_callback)],
         },

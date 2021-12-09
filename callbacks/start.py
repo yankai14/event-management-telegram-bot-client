@@ -22,6 +22,7 @@ def start_callback(update:Update, context: CallbackContext) -> None:
             [
                 InlineKeyboardButton(text="Event List", callback_data=str(State.EVENT_LIST.value)),
                 InlineKeyboardButton(text="Enrollment History", callback_data=str(State.ENROLLMENT_HISTORY.value)),
+                InlineKeyboardButton(text="Enroll Payment", callback_data=str(State.ENROLLMENT_PAYMENT.value)),
             ]
         ]
 

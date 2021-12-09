@@ -52,3 +52,19 @@ class EnrollmentSerializer(Schema):
         }
 
         return super().dump(dataRequired)
+
+class EnrollmentPaymentSerializer(Schema):
+
+    username = fields.Int(required=True)
+    eventInstanceCode = fields.Str(required=True)
+    
+    def dump(self, obj):
+        errors = self.validate(obj)
+        if errors:
+            raise ValidationError(details=errors, message=errors)
+
+        dataRequired = {
+            "username": obj.get("username"),
+            "eventInstanceCode": obj.get("eventInstanceCode"),
+        }
+        return super().dump(dataRequired)

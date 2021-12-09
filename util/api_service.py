@@ -21,6 +21,7 @@ class ApiEndpoints:
     CREATE_ENROLLMENT: str = "enrollment"
     GET_FOLDER: str = "event-instance-folder"
     CREATE_FOLDER_PERMISSION: str = "event-instance-folder-permissions"
+    STRIPE_CHECKOUT: str = "event-payment/"
 
     def __init__(self):
         for attr in dir(self):
@@ -96,9 +97,9 @@ class ApiService:
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
         params = {
-            "isCompleted": "false",
-            "isOpenForSignUps": "true",
-            "eventCode": event_code
+            "isCompleted": "0",
+            "isOpenForSignUps": "1",
+            "event": event_code
         }
         response = requests.get(
             APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
@@ -223,3 +224,15 @@ class ApiService:
                 folder_id, FolderPermission.FOLDER_ROLE_ENUM.READER.value, username, context)
 
         return folder_id
+
+    @staticmethod
+    def enrollment_payment(enrollment_data:dict, context:CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        response = requests.post(
+            APIEndpoints.STRIPE_CHECKOUT, json=enrollment_data, headers=headers
+        )
+        status_code = response.status_code
+        response = response.json()
+        return response, status_code

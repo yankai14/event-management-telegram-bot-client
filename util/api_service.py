@@ -145,9 +145,28 @@ class ApiService:
         params = {"user": username}
         response = requests.get(
             APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
         enrollments = response.json().get("results")
         status_code = response.status_code
-        return enrollments, status_code
+        return next_page, previous_page, enrollments, status_code
+
+    @staticmethod
+    def get_user_enrollments_pagination(username, page_number, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        params = {
+            "user": username,
+            "page": page_number
+            }
+        response = requests.get(
+            APIEndpoints.GET_ENROLLMENT_LIST, headers=headers, params=params)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
+        enrollments = response.json().get("results")
+        status_code = response.status_code
+        return next_page, previous_page, enrollments, status_code
 
     @staticmethod
     def check_enrollment_exist(username: int, event_instance_code: str, context: CallbackContext):

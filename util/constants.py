@@ -13,6 +13,8 @@ class State(Enum):
     LOGIN = 103
     ENROLLMENT_HISTORY = 104
     ENROLLMENT_PAYMENT = 105
+    ENROLLMENT_HISTORY_PAGINATION = 106
+
     # State definitions for Enrollment history feature
     ENROLLMENT_HISTORY_SELECTING_ACTION = 200
     ENROLLMENT_HISTORY_GET_INFO = 201
@@ -91,7 +93,7 @@ class EnrollmentStatus(Enum):
     ENROLLED = 2
     REJECTED = 3
     WITHDRAWN = 4
-    AWAITING_PAYMENT = 5
+    AWATING_PAYMENT = 5
 
 
 class Enrollment:
@@ -116,6 +118,7 @@ class History:
 
 class Payment:
     ENROLLMENT_PAYMENT_INFO = "enrollment_payment_info"
+    PAYMENT_ID = "paymentId"
 
 class Folder:
     # Data structure

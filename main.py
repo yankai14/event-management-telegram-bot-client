@@ -226,7 +226,10 @@ def main():
             State.ENROLLMENT_HISTORY_SELECTING_ACTION.value: [
                 CallbackQueryHandler(
                     enrollment_history.history_prompt_info_callback,
-                    pattern=f"^{History.ENROLLMENT_INFO}"
+                    pattern=f"^{History.ENROLLMENT_INFO}"),
+                CallbackQueryHandler(
+                    enrollment_history.history_callback_pagination,
+                    pattern=f"^{State.ENROLLMENT_HISTORY_PAGINATION.value}"
                 )
             ],
             State.ENROLLMENT_GET_INFO.value: [

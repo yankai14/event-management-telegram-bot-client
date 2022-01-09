@@ -34,20 +34,31 @@ def history_callback(update: Update, context: CallbackContext) -> None:
             msg += f"Application role: {Enrollment.ROLE_ENUM(enrollment[Enrollment.ROLE]).name}\n"
             msg += f"Completed: {enrollment[History.EVENT_INSTANCE][EventInstance.IS_COMPLETED]}\n\n"
 
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    text="Next Page", callback_data=str(State.ENROLLMENT_HISTORY_PAGINATION.value) + ":next_page_number:" + next_page_number)
-            ],
-            [
-                InlineKeyboardButton(
-                    text="More info", callback_data=History.ENROLLMENT_INFO),
-                InlineKeyboardButton(
-                    text="Back", callback_data=str(State.BACK.value))
+        if next_page:
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="Next Page", callback_data=str(State.ENROLLMENT_HISTORY_PAGINATION.value) + ":next_page_number:" + next_page_number)
+                ],
+                [
+                    InlineKeyboardButton(
+                        text="More info", callback_data=History.ENROLLMENT_INFO),
+                    InlineKeyboardButton(
+                        text="Back", callback_data=str(State.BACK.value))
+                ]
             ]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
 
+        elif next_page is None:
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        text="More info", callback_data=History.ENROLLMENT_INFO),
+                    InlineKeyboardButton(
+                        text="Back", callback_data=str(State.BACK.value))
+                ]
+            ] 
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
         TelegramService.edit_reply_text(msg, update, reply_markup)
 
     if status_code == HTTPStatus.OK and len(enrollments) == 0:
@@ -78,6 +89,7 @@ def history_callback_pagination(update: Update, context: CallbackContext):
             msg += f"Location: {enrollment[History.EVENT_INSTANCE][EventInstance.LOCATION]}\n"
             msg += f"Application role: {Enrollment.ROLE_ENUM(enrollment[Enrollment.ROLE]).name}\n"
             msg += f"Completed: {enrollment[History.EVENT_INSTANCE][EventInstance.IS_COMPLETED]}\n\n"
+
         if next_page and previous_page:
             next_page_section = re.search(r'\?(page=(.+))&', next_page)
             next_page_number = next_page_section.group(2)
@@ -86,7 +98,7 @@ def history_callback_pagination(update: Update, context: CallbackContext):
             keyboard = [
                 [
                     InlineKeyboardButton(
-                        text="Previous Page",callback_data=str(State.ENROLLMENT_HISTORY_PAGINATION.value) + ":previous_page_number:" + previous_page_number),
+                        text="Previous Page", callback_data=str(State.ENROLLMENT_HISTORY_PAGINATION.value) + ":previous_page_number:" + previous_page_number),
                     InlineKeyboardButton(
                         text="Next Page", callback_data=str(State.ENROLLMENT_HISTORY_PAGINATION.value) + ":next_page_number:" + next_page_number)
                 ],

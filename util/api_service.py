@@ -87,9 +87,27 @@ class ApiService:
             "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
         }
         response = requests.get(APIEndpoints.GET_EVENT_LIST, headers=headers)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
         events = response.json().get("results")
         status_code = response.status_code
-        return events, status_code
+        return next_page, previous_page, events, status_code
+
+    @staticmethod
+    def get_event_list_pagination(page_number, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        params = {
+            "page": page_number
+            }
+        response = requests.get(APIEndpoints.GET_EVENT_LIST, headers=headers, params=params)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
+        events = response.json().get("results")
+        status_code = response.status_code
+        return next_page, previous_page, events, status_code
+
 
     @staticmethod
     def get_event_instance_list(event_code: str, context: CallbackContext):
@@ -103,9 +121,30 @@ class ApiService:
         }
         response = requests.get(
             APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
         event_instances = response.json().get("results")
         status_code = response.status_code
-        return event_instances, status_code
+        return next_page, previous_page, event_instances, status_code
+
+    @staticmethod
+    def get_event_instance_list_pagination(page_number, event_code: str, context: CallbackContext):
+        headers = {
+            "Authorization": "Token " + context.user_data.get("AUTH_TOKEN")
+        }
+        params = {
+            "isCompleted": "0",
+            "isOpenForSignUps": "1",
+            "event": event_code,
+            "page": page_number
+        }
+        response = requests.get(
+            APIEndpoints.GET_EVENT_INSTANCE_LIST, headers=headers, params=params)
+        next_page = response.json().get("next")
+        previous_page = response.json().get("previous")
+        event_instances = response.json().get("results")
+        status_code = response.status_code
+        return next_page, previous_page, event_instances, status_code
 
     @staticmethod
     def get_specific_event_instance(event_instance_code: str, context: CallbackContext):

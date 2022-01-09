@@ -147,7 +147,7 @@ def main():
             State.END.value: State.END.value
         }
     )
-
+    
     event_feature_conv = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(
@@ -156,13 +156,26 @@ def main():
             )
         ],
         states={
-            State.EVENT_INSTANCE_LIST.value: [
+            State.EVENT_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    event.event_callback_pagination,
+                    pattern=f"^{str(State.EVENT_PAGINATION.value)}"
+                ),
                 CallbackQueryHandler(
                     event.event_instance_callback,
                     pattern=f"^{State.EVENT_INSTANCE_LIST.value}"
                 )
             ],
-            State.ENROLLMENT_SELECTING_ACTION.value: [enrollment_conv],
+            State.ENROLLMENT_SELECTING_ACTION.value: [
+                CallbackQueryHandler(
+                    event.event_callback,
+                    pattern=f"^{State.EVENT_LIST.value}$"
+                ),
+                CallbackQueryHandler(
+                    event.event_instance_callback_pagination,
+                    pattern=f"^{State.EVENT_INSTANCE_PAGINATION.value}"
+                ),
+                enrollment_conv],
         },
         fallbacks=[
             CallbackQueryHandler(

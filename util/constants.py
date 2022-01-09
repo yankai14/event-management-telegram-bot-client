@@ -13,7 +13,6 @@ class State(Enum):
     LOGIN = 103
     ENROLLMENT_HISTORY = 104
     ENROLLMENT_PAYMENT = 105
-    ENROLLMENT_HISTORY_PAGINATION = 106
 
     # State definitions for Enrollment history feature
     ENROLLMENT_HISTORY_SELECTING_ACTION = 200
@@ -27,13 +26,20 @@ class State(Enum):
     LOGIN_GET_INFO = 401
     LOGIN_SUBMIT = 402
     # State definitions for Event feature
-    EVENT_INSTANCE_LIST = 500
+    EVENT_SELECTING_ACTION = 500
+    EVENT_INSTANCE_LIST = 501
     # State definitions for Enrollment feature
     ENROLLMENT_SELECTING_ACTION = 601
     ENROLLMENT_GET_INFO = 602
     ENROLLMENT_SELECT_ROLE = 603
     ENROLLMENT_SUBMIT = 604
     ENROLLMENT_PAYMENT_GET_INFO = 701
+
+    #State definitions for Pagination
+    EVENT_PAGINATION = 801
+    EVENT_INSTANCE_PAGINATION = 802
+    ENROLLMENT_HISTORY_PAGINATION = 803
+
 
     # Meta states
     STOPPING = 1000

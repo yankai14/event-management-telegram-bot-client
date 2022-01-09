@@ -12,24 +12,24 @@ from http import HTTPStatus
 
 def enrollment_payment_callback(update:Update, context:CallbackContext):
 
-    msg = "Please click on *event code* if you would like to make payment for a specific event you enrolled for. "
+    msg = "Please click on *Event Instance Code* if you would like to make payment for a specific event you enrolled for. To check for your enrolled courses and their event instance codes, click *Back* and click on *Enrollment History*"
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Event Code", callback_data=Payment.ENROLLMENT_PAYMENT_INFO),
+            InlineKeyboardButton(text="Event Instance Code", callback_data=Payment.ENROLLMENT_PAYMENT_INFO),
             InlineKeyboardButton(text="Back", callback_data=str(State.BACK.value))
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    TelegramService.edit_reply_text(msg, update, reply_markup)
+    TelegramService.edit_reply_text(msg, update, reply_markup) 
     return State.ENROLLMENT_HISTORY_SELECTING_ACTION.value
 
 
 def prompt_get_enrolled_info_callback(update:Update, context:CallbackContext):
     TelegramService.remove_prev_keyboard(update)
 
-    msg = "Enter the exact *Event Code* you would like to make payment for"
+    msg = "Enter the exact *Event Instance Code* you would like to make payment for.  "
     TelegramService.edit_reply_text(msg, update)
     return State.ENROLLMENT_PAYMENT_GET_INFO.value
 
